@@ -1,0 +1,24 @@
+<div style="display: flex; flex-direction: column; align-items: center">
+	<video id="artc_videoInput" width="800" height="600" style="display: none"></video>
+
+	<canvas id="artc_canvasOutput" width="800" height="600" style="background-color: black"></canvas>
+	<select id="artc_deviceSelect" style="display:none"></select>
+	<div id="artc_loadingIndicator" class="mdl-spinner mdl-js-spinner is-active"></div>
+	<div style="display: flex; width: 800px">
+		<button id="artc_buttonAction"
+		        class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
+		        style="display: none">
+			Button
+		</button>
+		<div style="flex: 1;"></div>
+		<button id="artc_buttonStart"
+		        class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
+		        style="display: none">
+			<i class="material-icons">play_arrow</i>
+		</button>
+		<button id="artc_buttonStop" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect"
+		        style="display: none">
+			<i class="material-icons">stop</i>
+		</button>
+	</div>
+</div>

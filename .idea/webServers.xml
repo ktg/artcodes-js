@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="8d830012-d243-4c34-9ba3-65cd339e5b25" name="wornchaos.org" url="https://wornchaos.org">
+        <fileTransfer rootFolder="/home/kglover/wornchaos.org" accessType="SFTP" host="wornchaos.org" port="22" sshConfigId="0bd69298-2ec6-4a9a-a290-ff20b292ef00" sshConfig="wornchaos.org">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
