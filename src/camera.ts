@@ -61,24 +61,17 @@ export class VideoReader {
 		return this.mat
 	}
 
-	start(): Promise<unknown> {
-		const _this = this
-		return new Promise(function (resolve) {
-			_this.video.addEventListener('canplay', function () {
-				const size = _this.getSize()
-				_this._size = size
-				_this.canvas.width = size.width
-				_this.canvas.height = size.height
-				_this.mat = new cv.Mat(size.height, size.width, cv.CV_8UC4)
-				_this.streaming = true
-				resolve()
-			}, false)
-			navigator.mediaDevices.getUserMedia(_this._constraints).then(function (stream) {
-				_this.stream = _this.video.srcObject = stream;
-				_this._deviceId = _this.stream.getVideoTracks()[0].getCapabilities().deviceId
-				_this.video.play()
-			});
-		});
+	async start(): Promise<void> {
+		const stream = await navigator.mediaDevices.getUserMedia(this._constraints)
+		this.stream = this.video.srcObject = stream;
+		this._deviceId = this.stream.getVideoTracks()[0].getCapabilities().deviceId
+		await this.video.play()
+		const size = this.getSize()
+		this._size = size
+		this.canvas.width = size.width
+		this.canvas.height = size.height
+		this.mat = cv.Mat.zeros(size.height, size.width, cv.CV_8UC4)
+		this.streaming = true
 	}
 
 	stop(): void {

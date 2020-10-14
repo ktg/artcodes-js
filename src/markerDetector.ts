@@ -1,5 +1,6 @@
 import * as Mirada from 'mirada'
 import {Marker} from "./marker";
+import {Experience, Action} from "./experience";
 
 const NEXT_NODE = 0;
 //const PREV_NODE = 1;
@@ -52,7 +53,7 @@ export class MarkerDetector {
 		this.minRegions = minRegions
 		this.maxValue = maxValue
 		this.minValue = minValue
-		console.log(this)
+		//console.log(this)
 	}
 
 	findMarker(hierarchy: Mirada.Mat) {

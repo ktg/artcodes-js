@@ -1,3 +1,5 @@
+import {Marker} from "./marker";
+
 const test = {
 	"actions": [{
 		"codes": ["1:1:1:3:3", "1:1:1:6:6", "1:1:2:2:3", "1:1:2:4:4", "1:1:2:4:4", "1:1:2:5:6", "1:1:3:5:5", "1:1:4:4:5"],
@@ -28,7 +30,7 @@ const test = {
 	"pipeline": ["tile", "detect"]
 }
 
-class Action {
+export class Action {
 	readonly codes: Array<string>
 	//readonly match: string
 	readonly name: string
@@ -36,11 +38,11 @@ class Action {
 	readonly url: string
 }
 
-class Experience {
+export class Experience {
+	readonly name: string
+	readonly image: string
+	readonly actions: Array<Action>
 	//readonly author: string
 	//readonly description: string
 	//readonly icon: string
-	//readonly image: string
-	readonly name: string
-	readonly actions: Array<Action>
 }

@@ -1,3 +1,4 @@
+import {Action} from "./experience";
 
 export class Marker {
 	nodeIndex: number

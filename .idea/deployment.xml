@@ -5,7 +5,7 @@
       <paths name="wornchaos.org">
         <serverdata>
           <mappings>
-            <mapping deploy="/artcodes" local="$PROJECT_DIR$/server/static" web="/artcodes" />
+            <mapping deploy="/artcodes" local="$PROJECT_DIR$/build" web="/artcodes" />
           </mappings>
         </serverdata>
       </paths>

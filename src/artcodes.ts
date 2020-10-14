@@ -1,148 +1,177 @@
 import * as Mirada from 'mirada'
 import {Marker} from "./marker"
 import {VideoReader} from "./camera"
-import {MarkerDetector} from "./markerDetector"
-import scannerHtml from './scanner.html'
+import {MarkerDetector} from './markerDetector'
+import {Experience} from "./experience";
 
 declare var cv: Mirada.CV
 
-// TODO Add options?
-export async function scan(root: HTMLElement, experience: Experience) {
-	console.log(scannerHtml)
-	root.innerHTML = scannerHtml
+export enum State {
+	loading,
+	idle,
+	scanning
+}
 
-	const video = document.getElementById('artc_videoInput') as HTMLVideoElement
-	const canvas = document.getElementById('artc_canvasOutput') as HTMLCanvasElement
+class UI {
+	readonly debugView?: Boolean = false
+	readonly video: HTMLVideoElement
+	readonly canvas: HTMLCanvasElement
+	readonly deviceSelect: HTMLSelectElement
+	readonly markerChanged: (marker: Marker) => void
+	readonly stateChanged: (state: State) => void
+}
 
-	const buttonStop = document.getElementById('artc_buttonStop') as HTMLButtonElement
-	const buttonStart = document.getElementById('artc_buttonStart') as HTMLButtonElement
-	const buttonAction = document.getElementById('artc_buttonAction') as HTMLButtonElement
-
-	const deviceSelect = document.getElementById('artc_deviceSelect') as HTMLSelectElement
-	const loadingIndicator = document.getElementById('artc_loadingIndicator')
-
-	await Mirada.loadOpencv()
-	const detector = new MarkerDetector(experience)
-
-	const camera = new VideoReader(video, canvas, {
-		video: {facingMode: 'environment'},
-		audio: false
+export async function createScanner(experience: Experience, ui: UI): Promise<Scanner> {
+	if (location.protocol != 'https:' && location.host != 'localhost') {
+		throw Error("Artcodes requires https in order to access camera")
+	}
+	let opencvPath = '/opencv.js'
+	const scripts = document.querySelectorAll<HTMLScriptElement>('script');
+	scripts.forEach(el => {
+		const index = el.src.indexOf('/artcodes.')
+		if (index > 0) {
+			opencvPath = el.src.slice(0, index) + '/opencv.js'
+		}
 	});
 
-	const selectListener = () => {
-		camera.stop()
-		camera.constraints = {
-			video: {deviceId: deviceSelect.value}
-		}
-		startCamera()
-	}
-
-	const stopCamera = () => {
-		history.replaceState(null, null, ' ' + '');
-		camera.stop()
-		buttonStop.style.display = 'none'
-		deviceSelect.style.display = 'none'
-	}
-
-	const FPS = 10
-	const color = new cv.Scalar(0, 255, 0)
-	let currentMarker: Marker = null
-	const startCamera = async () => {
-		try {
-			loadingIndicator.style.display = 'block'
-			buttonStart.style.display = 'none'
-			await camera.start()
-			const size = camera.size
-			//const blurSize = new cv.Size(3, 3)
-			const dst = new cv.Mat(size.width, size.height, cv.CV_8UC1)
-			let lastActionTime: number = 0
-			const actionTimeout = 5000
-			buttonStop.style.display = 'block'
-			loadingIndicator.style.display = 'none'
-			buttonStart.style.display = 'none'
-			history.replaceState(null, null, '#play');
-
-			navigator.mediaDevices.enumerateDevices()
-				.then(function (devices) {
-					deviceSelect.removeEventListener('input', selectListener)
-					while (deviceSelect.options.length > 0) {
-						deviceSelect.remove(0);
-					}
-					const cameras = devices.filter((device) => device.kind == 'videoinput')
-					if (cameras.length > 1) {
-						cameras.forEach((camera) => {
-							const opt = document.createElement('option');
-							opt.value = camera.deviceId;
-							opt.innerHTML = camera.label;
-							deviceSelect.appendChild(opt);
-						})
-						deviceSelect.value = camera.deviceId
-						deviceSelect.addEventListener('input', selectListener)
-						deviceSelect.style.display = 'block'
-					}
-				})
-				.catch(function (err) {
-					console.log(err.name + ": " + err.message);
-				});
-			const processVideo = () => {
-				if (camera.isStreaming) {
-					const begin = Date.now()
-					const src = camera.read()
-					cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
-					cv.flip(dst, dst, 1)
-					cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 101, 1)
-
-					const contours = new cv.MatVector()
-					const hierarchy = new cv.Mat()
-					cv.findContours(dst, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-
-					const marker = detector.findMarker(hierarchy)
-					if (marker != null) {
-						if (!marker.equals(currentMarker)) {
-							buttonAction.innerText = marker.action.name
-							currentMarker = marker
-							buttonAction.style.display = 'block'
-						}
-						cv.drawContours(dst, contours, marker.nodeIndex, color, 2, cv.LINE_8, hierarchy, 100)
-					} else if (currentMarker != null) {
-						if (lastActionTime == 0) {
-							lastActionTime = Date.now() + actionTimeout
-						} else if (Date.now() > lastActionTime) {
-							lastActionTime = 0
-							currentMarker = marker
-							buttonAction.style.display = 'none'
-						}
-					}
-					cv.imshow(canvas, dst)
-					const delay = 1000 / FPS - (Date.now() - begin)
-					setTimeout(processVideo, delay)
-				} else {
-					dst.delete()
-					buttonStart.style.display = 'block'
-				}
-			}
-
-			processVideo()
-
-		} catch (error) {
-			console.log('navigator.MediaDevices.getUserMedia error: ', error.message, error.name);
-			console.trace(error)
-		}
-	}
-
-	buttonAction.addEventListener('click', () => {
-		location.href = currentMarker.action.url
+	await Mirada.loadOpencv({
+		opencvJsLocation: opencvPath
 	})
-	buttonStart.addEventListener("click", () => {
-		startCamera()
-	});
-	loadingIndicator.style.display = 'none'
-	buttonStart.style.display = 'block'
-	buttonStop.addEventListener("click", () => {
-		stopCamera()
-	});
+
+	const scanner = new Scanner(experience, ui)
 
 	if (location.hash == '#play') {
-		await startCamera()
+		await scanner.start()
+	} else {
+		scanner.stop()
+	}
+	return scanner
+}
+
+export class Scanner {
+	private readonly experience: Experience
+	private readonly ui: UI
+	private _state: State = State.loading
+	private readonly camera: VideoReader
+	private readonly fps: number = 10
+	private currentMarker: Marker = null
+	private readonly color = new cv.Scalar(255, 255, 0)
+	private readonly detector
+
+	constructor(experience: Experience, ui: UI) {
+		this.experience = experience
+		this.ui = ui
+
+		this.detector = new MarkerDetector(experience)
+		this.camera = new VideoReader(this.ui.video, this.ui.canvas, {
+			video: {facingMode: 'environment'},
+			audio: false
+		});
+		ui.stateChanged(State.loading)
+	}
+
+	private setState(newState: State) {
+		this._state = newState
+		this.ui.stateChanged(newState)
+	}
+
+	private selectListener(): void {
+		this.camera.stop()
+		this.camera.constraints = {
+			video: {deviceId: this.ui.deviceSelect.value}
+		}
+		this.start()
+	}
+
+	get state(): State {
+		return this._state
+	}
+
+	async start(): Promise<void> {
+		if (this._state != State.scanning) {
+			try {
+				await this.camera.start()
+				const size = this.camera.size
+				const dst = new cv.Mat(size.width, size.height, cv.CV_8UC1)
+				let lastActionTime: number = 0
+				const actionTimeout = 5000
+				this.ui.stateChanged(State.scanning)
+				this.ui.markerChanged(null)
+				history.replaceState(null, null, '#play');
+
+				const devices = await navigator.mediaDevices.enumerateDevices()
+				this.ui.deviceSelect.removeEventListener('input', this.selectListener)
+				while (this.ui.deviceSelect.options.length > 0) {
+					this.ui.deviceSelect.remove(0);
+				}
+				const cameras = devices.filter((device) => device.kind == 'videoinput')
+				if (cameras.length > 1) {
+					cameras.forEach((camera) => {
+						const opt = document.createElement('option');
+						opt.value = camera.deviceId;
+						opt.innerHTML = camera.label;
+						this.ui.deviceSelect.appendChild(opt);
+					})
+					this.ui.deviceSelect.value = this.camera.deviceId
+					this.ui.deviceSelect.addEventListener('input', this.selectListener)
+					this.ui.deviceSelect.style.display = ''
+				}
+
+				const processVideo = () => {
+					if (this.camera.isStreaming) {
+						const begin = Date.now()
+						const src = this.camera.read()
+						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
+						//cv.flip(dst, dst, 1)
+						cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 101, 1)
+
+						const contours = new cv.MatVector()
+						const hierarchy = new cv.Mat()
+						cv.findContours(dst, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+
+						if (this.ui.debugView == true) {
+							cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGB)
+						} else {
+							cv.cvtColor(src, dst, cv.COLOR_RGBA2RGB)
+						}
+
+						const marker = this.detector.findMarker(hierarchy)
+						if (marker != null) {
+							if (!marker.equals(this.currentMarker)) {
+								this.currentMarker = marker
+								this.ui.markerChanged(marker)
+							}
+							lastActionTime = Date.now() + actionTimeout
+							cv.drawContours(dst, contours, marker.nodeIndex, this.color, 2, cv.LINE_8, hierarchy, 100)
+						} else if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
+							lastActionTime = 0
+							this.currentMarker = marker
+							this.ui.markerChanged(null)
+						}
+						cv.flip(dst, dst, 1)
+						cv.imshow(this.ui.canvas, dst)
+						const delay = 1000 / this.fps - (Date.now() - begin)
+						setTimeout(processVideo, delay)
+					} else {
+						dst.delete()
+						this.setState(State.idle)
+						//this.ui.startButton.classList.remove('mdc-fab--exited')
+					}
+				}
+
+				processVideo()
+
+			} catch (error) {
+				console.log('error: ', error.message, error.name);
+				console.trace(error)
+				this.stop()
+			}
+		}
+	}
+
+	stop(): void {
+		history.replaceState(null, null, ' ' + '')
+		this.camera.stop()
+		this.setState(State.idle)
 	}
 }

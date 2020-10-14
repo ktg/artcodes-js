@@ -4,13 +4,11 @@
 	<title>Artcodes</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=800, user-scalable=no">
-	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-blue.min.css"/>
-	<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 	<script defer>
 		window.addEventListener('load', () => {
-			window.artcodes.scan(document.getElementById('content'), {
+			window.artcodes.buildScan(document.getElementById('content'), {
 				"name": " Carolan Performance",
+				"image": "https://carolanguitar.files.wordpress.com/2014/10/bottom-to-top.jpg",
 				"actions": [{
 					"name": "Carolan Guitar",
 					"url": "https://carolanguitar.com",
@@ -43,16 +41,6 @@
 			})
 		})
 	</script>
-
-	<style>
-		.mdl-button {
-			margin: 10px 20px;
-		}
-
-		.mdl-spinner {
-			margin: 10px 20px;
-		}
-	</style>
 </head>
 <body>
 <div id="content"></div>
