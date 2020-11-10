@@ -122,8 +122,7 @@ export class Scanner {
 						const begin = Date.now()
 						const src = this.camera.read()
 						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
-						//cv.flip(dst, dst, 1)
-						cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 101, 1)
+						cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, this.experience.settings.threshSize, this.experience.settings.threshConst)
 
 						const contours = new cv.MatVector()
 						const hierarchy = new cv.Mat()
