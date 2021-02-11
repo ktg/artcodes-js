@@ -1,4 +1,4 @@
-import {Mat, Size, VideoCapture} from "mirada";
+import {Mat, VideoCapture} from "mirada";
 import * as Mirada from "mirada";
 
 declare var cv: Mirada.CV
@@ -6,10 +6,6 @@ declare var cv: Mirada.CV
 export class VideoReader {
 	public get isStreaming(): boolean {
 		return this.streaming
-	}
-
-	public get size(): Size {
-		return this._size;
 	}
 
 	public get constraints(): MediaStreamConstraints {
@@ -36,7 +32,7 @@ export class VideoReader {
 
 	//private o: Options;
 	private mat: Mat;
-	private _size: Size;
+	private settings: MediaTrackSettings;
 	private _deviceId: string;
 	private readonly cap: VideoCapture;
 	private streaming: boolean
@@ -53,7 +49,6 @@ export class VideoReader {
 		this.canvas = canvas
 		this.mat = null
 		this.streaming = false
-		this._size = this.getSize()
 	}
 
 	read(): Mat {
@@ -61,16 +56,29 @@ export class VideoReader {
 		return this.mat
 	}
 
+	get shouldFlip(): boolean {
+		return this.settings.facingMode == "user";
+	}
+
+	get width(): number {
+		return this.settings.width
+	}
+
+	get height(): number {
+		return this.settings.height
+	}
+
 	async start(): Promise<void> {
 		const stream = await navigator.mediaDevices.getUserMedia(this._constraints)
 		this.stream = this.video.srcObject = stream;
 		this._deviceId = this.stream.getVideoTracks()[0].getCapabilities().deviceId
+		this.settings = this.stream.getVideoTracks()[0].getSettings();
+		this.video.width = this.settings.width;
+		this.video.height = this.settings.height
 		await this.video.play()
-		const size = this.getSize()
-		this._size = size
-		this.canvas.width = size.width
-		this.canvas.height = size.height
-		this.mat = cv.Mat.zeros(size.height, size.width, cv.CV_8UC4)
+		this.canvas.width = this.settings.width
+		this.canvas.height = this.settings.height
+		this.mat = cv.Mat.zeros(this.settings.height, this.settings.width, cv.CV_8UC4)
 		this.streaming = true
 	}
 
@@ -83,13 +91,6 @@ export class VideoReader {
 			this.video.pause()
 			this.streaming = false
 			this.mat.delete()
-		}
-	}
-
-	private getSize(): Size {
-		return {
-			width: this.video.width,
-			height: this.video.height
 		}
 	}
 }

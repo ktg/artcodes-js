@@ -75,13 +75,13 @@ export class Scanner {
 		this.ui.stateChanged(newState)
 	}
 
-	private selectListener(): void {
+	private selectListener = function (): void {
 		this.camera.stop()
 		this.camera.constraints = {
 			video: {deviceId: this.ui.deviceSelect.value}
 		}
 		this.start()
-	}
+	}.bind(this)
 
 	get state(): State {
 		return this._state
@@ -91,8 +91,7 @@ export class Scanner {
 		if (this._state != State.scanning) {
 			try {
 				await this.camera.start()
-				const size = this.camera.size
-				const dst = new cv.Mat(size.width, size.height, cv.CV_8UC1)
+				const dst = new cv.Mat(this.camera.width, this.camera.height, cv.CV_8UC1)
 				let lastActionTime: number = 0
 				const actionTimeout = 5000
 				this.ui.stateChanged(State.scanning)
@@ -147,14 +146,16 @@ export class Scanner {
 							this.currentMarker = marker
 							this.ui.markerChanged(null)
 						}
-						cv.flip(dst, dst, 1)
+
+						if (this.camera.shouldFlip) {
+							cv.flip(dst, dst, 1)
+						}
 						cv.imshow(this.ui.canvas, dst)
 						const delay = 1000 / this.fps - (Date.now() - begin)
 						setTimeout(processVideo, delay)
 					} else {
 						dst.delete()
 						this.setState(State.idle)
-						//this.ui.startButton.classList.remove('mdc-fab--exited')
 					}
 				}
 
