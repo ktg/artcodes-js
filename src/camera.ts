@@ -1,5 +1,5 @@
-import {Mat, VideoCapture} from "mirada";
-import * as Mirada from "mirada";
+import type {Mat, VideoCapture} from "mirada";
+import type * as Mirada from "mirada";
 
 declare var cv: Mirada.CV
 
@@ -69,11 +69,10 @@ export class VideoReader {
 	}
 
 	async start(): Promise<void> {
-		const stream = await navigator.mediaDevices.getUserMedia(this._constraints)
-		this.stream = this.video.srcObject = stream;
+		this.stream = this.video.srcObject = await navigator.mediaDevices.getUserMedia(this._constraints)
 		this._deviceId = this.stream.getVideoTracks()[0].getCapabilities().deviceId
-		this.settings = this.stream.getVideoTracks()[0].getSettings();
-		this.video.width = this.settings.width;
+		this.settings = this.stream.getVideoTracks()[0].getSettings()
+		this.video.width = this.settings.width
 		this.video.height = this.settings.height
 		await this.video.play()
 		this.canvas.width = this.settings.width
@@ -84,9 +83,7 @@ export class VideoReader {
 
 	stop(): void {
 		if (this.streaming) {
-			this.stream.getVideoTracks().forEach(function (t) {
-				return t.stop();
-			})
+			this.stream.getVideoTracks().forEach(t => t.stop())
 			this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height)
 			this.video.pause()
 			this.streaming = false

@@ -1,4 +1,4 @@
-import {Action} from "./experience";
+import type {Action} from "./experience";
 
 export class Marker {
 	nodeIndex: number

@@ -1,6 +1,6 @@
-import * as Mirada from 'mirada'
+import {Mat} from "mirada";
 import {Marker} from "./marker";
-import {Experience, Action} from "./experience";
+import type {Experience, Action} from "./experience";
 
 const NEXT_NODE = 0;
 //const PREV_NODE = 1;
@@ -34,8 +34,8 @@ export class MarkerDetector {
 		let maxValue = 1
 		let maxRegions = 20
 		let minRegions = 1
-		experience.actions.forEach((action) => {
-			action.codes.forEach((code) => {
+		experience.actions.forEach(action => {
+			action.codes.forEach(code => {
 				const markerCode = new MarkerCode(code.split(':').map((value) => {
 					return Number.parseInt(value)
 				}), action)
@@ -56,7 +56,7 @@ export class MarkerDetector {
 		//console.log(this)
 	}
 
-	findMarker(hierarchy: Mirada.Mat) {
+	findMarker(hierarchy: Mat) {
 		for (let i = 0; i < hierarchy.cols; ++i) {
 			let result = this.createMarkerForNode(i, hierarchy)
 			if (result != null) {
@@ -65,15 +65,15 @@ export class MarkerDetector {
 		}
 	}
 
-	private static getFirstChild(hierarchy: Mirada.Mat, nodeIndex: number): number {
+	private static getFirstChild(hierarchy: Mat, nodeIndex: number): number {
 		return (hierarchy.intPtr(0, nodeIndex) as Int32Array)[FIRST_CHILD_NODE]
 	}
 
-	private static getNextNode(hierarchy: Mirada.Mat, nodeIndex: number): number {
+	private static getNextNode(hierarchy: Mat, nodeIndex: number): number {
 		return (hierarchy.intPtr(0, nodeIndex) as Int32Array)[NEXT_NODE]
 	}
 
-	private createMarkerForNode(nodeIndex: number, hierarchy: Mirada.Mat) {
+	private createMarkerForNode(nodeIndex: number, hierarchy: Mat) {
 		let regions: number[] = []
 
 		let currentNodeIndex = MarkerDetector.getFirstChild(hierarchy, nodeIndex)
@@ -97,9 +97,7 @@ export class MarkerDetector {
 
 		regions.sort()
 		for (let code of this.codes) {
-			let is_same = (code.code.length == regions.length) && code.code.every(function (element, index) {
-				return element === regions[index];
-			});
+			let is_same = (code.code.length == regions.length) && code.code.every((element, index) => element === regions[index]);
 			if (is_same) {
 				return new Marker(nodeIndex, regions, code.action);
 			}
@@ -107,7 +105,7 @@ export class MarkerDetector {
 		return null;
 	}
 
-	private countLeafs(nodeIndex: number, hierarchy: Mirada.Mat): number {
+	private countLeafs(nodeIndex: number, hierarchy: Mat): number {
 		let leafCount = 0;
 		let currentNodeIndex = MarkerDetector.getFirstChild(hierarchy, nodeIndex)
 		while (currentNodeIndex >= 0) {

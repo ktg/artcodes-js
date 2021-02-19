@@ -4,45 +4,75 @@
 	<title>Artcodes</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=800, user-scalable=no">
-	<script defer>
-		window.addEventListener('load', () => {
-			window.artcodes.buildScan(document.getElementById('content'), {
-				"name": " Carolan Performance",
-				"image": "https://carolanguitar.files.wordpress.com/2014/10/bottom-to-top.jpg",
-				"actions": [{
-					"name": "Carolan Guitar",
-					"url": "https://carolanguitar.com",
-					"codes": ["1:1:1:1:2"]
-				}, {
-					"name": "Tech Specs",
-					"url": "https://carolanguitar.com/tech-spec/",
-					"codes": ["1:1:1:1:1"]
-				}, {
-					"name": "User Guide",
-					"url": "https://carolanguitar.com/user-guide/",
-					"codes": ["1:1:2:3:5"]
-				}, {
-					"name": "Specifications",
-					"url": "http://wp.me/P4QC5t-3T",
-					"codes": ["1:1:2:4:4"]
-				}, {
-					"name": "Learn about Artcodes",
-					"url": "http://www.artcodes.co.uk",
-					"codes": ["1:1:5:5:6"]
-				}, {
-					"name": "Let's Play",
-					"url": "https://www.youtube.com/watch?v=lZaZwAXwox4",
-					"codes": ["1:1:1:4:5"]
-				}, {
-					"name": "Playlist",
-					"url": "https://www.youtube.com/playlist?list=PLPvnQgbeSXV5tJzd4hZ9AFE0qF7oCuV2G",
-					"codes": ["1:1:3:3:4"]
-				}],
-			})
-		})
-	</script>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
 </head>
 <body>
-<div id="content"></div>
+<div id="content">
+	<div style="display: flex; flex-direction: column; align-items: center">
+		<video id="artc_videoInput" width="800" height="600" style="display: none"></video>
+		<div id="artc_placeholder"
+		     style="width: 800px; height: 600px; overflow: hidden; display: flex; align-items: center">
+			<img id="artc_image" width="800" style="display: none">
+		</div>
+		<canvas id="artc_canvasOutput" width="800" height="600" style="background-color: black; display: none"></canvas>
+		<div style="display: flex; width: 800px; padding: 10px">
+			<button id="artc_buttonAction" class="mdc-fab mdc-fab--extended mdc-fab--exited" style="display:none;">
+				<div class="mdc-fab__ripple"></div>
+				<span class="mdc-fab__label"></span>
+			</button>
+			<div style="flex: 1;"></div>
+			<select id="artc_deviceSelect" style="display: none"></select>
+			<div style="flex: 1;"></div>
+			<div style="position: relative">
+				<button id="artc_buttonStart" class="mdc-fab mdc-fab--extended mdc-fab--exited" style="display: none">
+					<div class="mdc-fab__ripple"></div>
+					<span class="material-icons mdc-fab__icon">camera_alt</span>
+					<span class="mdc-fab__label">Scan</span>
+				</button>
+				<button id="artc_buttonStop" class="mdc-button mdc-button--outlined" style="display: none">
+					<div class="mdc-button__ripple"></div>
+					<i class="material-icons mdc-button__icon" aria-hidden="true">stop</i>
+					<span class="mdc-button__label">Stop</span>
+				</button>
+				<div id="artc_loadingIndicator" class="mdc-circular-progress mdc-circular-progress--large"
+				     style="position: absolute; right: 0" role="progressbar">
+					<div class="mdc-circular-progress__determinate-container">
+						<svg class="mdc-circular-progress__determinate-circle-graphic" viewBox="0 0 48 48"
+						     xmlns="http://www.w3.org/2000/svg">
+							<circle class="mdc-circular-progress__determinate-circle" cx="24" cy="24" r="18"
+							        stroke-dasharray="113.097" stroke-dashoffset="113.097"/>
+						</svg>
+					</div>
+					<div class="mdc-circular-progress__indeterminate-container">
+						<div class="mdc-circular-progress__spinner-layer">
+							<div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-left">
+								<svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48"
+								     xmlns="http://www.w3.org/2000/svg">
+									<circle cx="24" cy="24" r="18" stroke-dasharray="113.097"
+									        stroke-dashoffset="56.549"/>
+								</svg>
+							</div>
+							<div class="mdc-circular-progress__gap-patch">
+								<svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48"
+								     xmlns="http://www.w3.org/2000/svg">
+									<circle cx="24" cy="24" r="18" stroke-dasharray="113.097"
+									        stroke-dashoffset="56.549"/>
+								</svg>
+							</div>
+							<div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-right">
+								<svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48"
+								     xmlns="http://www.w3.org/2000/svg">
+									<circle cx="24" cy="24" r="18" stroke-dasharray="113.097"
+									        stroke-dashoffset="56.549"/>
+								</svg>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 </body>
 </html>
