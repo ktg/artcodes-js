@@ -30,7 +30,7 @@ export enum State {
 	scanning
 }
 
-class UI {
+export class ScannerUI {
 	readonly debugView?: Boolean = false
 	readonly video: HTMLVideoElement
 	readonly canvas: HTMLCanvasElement
@@ -39,7 +39,7 @@ class UI {
 	readonly stateChanged: (state: State) => void
 }
 
-export async function createScanner(experience: Experience, ui: UI): Promise<Scanner> {
+export async function createScanner(experience: Experience, ui: ScannerUI): Promise<Scanner> {
 	if (location.protocol != 'https:' && location.host != 'localhost') {
 		console.warn("Artcodes requires https in order to access camera")
 		return null
@@ -69,7 +69,7 @@ export async function createScanner(experience: Experience, ui: UI): Promise<Sca
 
 export class Scanner {
 	private readonly experience: Experience
-	private readonly ui: UI
+	private readonly ui: ScannerUI
 	private _state: State = State.loading
 	private readonly camera: VideoReader
 	private readonly fps: number = 10
@@ -77,7 +77,7 @@ export class Scanner {
 	private readonly color = new Scalar(255, 255, 0)
 	private readonly detector
 
-	constructor(experience: Experience, ui: UI) {
+	constructor(experience: Experience, ui: ScannerUI) {
 		this.experience = experience
 		this.ui = ui
 

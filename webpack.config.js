@@ -8,7 +8,7 @@ module.exports = (env) => {
 	return {
 		entry: {
 			artcodes: './src/artcodes.ts',
-			main: './src/main.ts'
+			main: './src/test.ts'
 		},
 		devtool: env === 'dev' ? 'inline-source-map' : false,
 		mode: env === 'dev' ? 'development' : 'production',
@@ -28,7 +28,7 @@ module.exports = (env) => {
 		plugins: [
 			new CleanWebpackPlugin({cleanStaleWebpackAssets: true}),
 			new HtmlWebpackPlugin({
-				template: '!!html-loader!src/index.html',
+				template: '!!html-loader!src/test.html',
 				scriptLoading: 'defer',
 				inject: true
 			}),
@@ -44,8 +44,8 @@ module.exports = (env) => {
 		output: {
 			filename: '[name].[contenthash].js',
 			path: path.resolve('./build'),
-			library: 'artcodes',
-			libraryTarget: 'window',
+			//library: 'artcodes',
+			//libraryTarget: 'window',
 		}
 	}
 };

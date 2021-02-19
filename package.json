@@ -13,8 +13,10 @@
 			"githubUsername": "ktg"
 		}
 	],
-	"main": "app.js",
-	"types": "index.d.ts",
+	"main": "src/artcodes.ts",
+	"files": [
+		"src/"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ktg/artcodes-js.git",
