@@ -13,9 +13,9 @@
 			"githubUsername": "ktg"
 		}
 	],
-	"main": "src/artcodes.ts",
+	"main": "dist/artcodes.js",
 	"files": [
-		"src/"
+		"dist/"
 	],
 	"repository": {
 		"type": "git",
