@@ -1,8 +1,7 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
+		"module": "esnext",
 		"noImplicitAny": true,
-		"outDir": "./dist/",
 		"pretty": false,
 		"declaration": true,
 		"removeComments": true,

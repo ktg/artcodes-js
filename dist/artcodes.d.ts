@@ -1,11 +1,31 @@
-import type { Marker } from "./marker";
-import type { Experience } from "./experience";
-export declare enum State {
+declare class Action {
+    readonly codes: Array<string>;
+    readonly name: string;
+    readonly url: string;
+}
+declare class Settings {
+    readonly threshSize: number;
+    readonly threshConst: number;
+}
+declare class Experience {
+    readonly name: string;
+    readonly image: string;
+    readonly actions: Array<Action>;
+    readonly settings: Settings;
+}
+declare class Marker {
+    nodeIndex: number;
+    regions: number[];
+    action: Action;
+    constructor(nodeIndex: number, regions: number[], action: Action);
+    equals(marker: Marker): boolean;
+}
+declare enum State {
     loading = 0,
     idle = 1,
     scanning = 2
 }
-export declare class ScannerUI {
+declare class ScannerUI {
     readonly debugView?: Boolean;
     readonly video: HTMLVideoElement;
     readonly canvas: HTMLCanvasElement;
@@ -13,8 +33,8 @@ export declare class ScannerUI {
     readonly markerChanged: (marker: Marker) => void;
     readonly stateChanged: (state: State) => void;
 }
-export declare function createScanner(experience: Experience, ui: ScannerUI): Promise<Scanner>;
-export declare class Scanner {
+declare function createScanner(experience: Experience, ui: ScannerUI): Promise<Scanner>;
+declare class Scanner {
     private readonly experience;
     private readonly ui;
     private _state;
@@ -30,3 +50,4 @@ export declare class Scanner {
     start(): Promise<void>;
     stop(): void;
 }
+export { State, ScannerUI, createScanner, Scanner };
