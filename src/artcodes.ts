@@ -30,8 +30,9 @@ export enum State {
 	scanning
 }
 
-export class ScannerUI {
+export class ScannerOptions {
 	readonly debugView?: Boolean = false
+	readonly useUrlHash?: Boolean = false
 	readonly video: HTMLVideoElement
 	readonly canvas: HTMLCanvasElement
 	readonly deviceSelect: HTMLSelectElement
@@ -39,7 +40,7 @@ export class ScannerUI {
 	readonly stateChanged: (state: State) => void
 }
 
-export async function createScanner(experience: Experience, ui: ScannerUI): Promise<Scanner> {
+export async function createScanner(experience: Experience, options: ScannerOptions): Promise<Scanner> {
 	if (location.protocol != 'https:' && location.host != 'localhost') {
 		console.warn("Artcodes requires https in order to access camera")
 		return null
@@ -57,7 +58,7 @@ export async function createScanner(experience: Experience, ui: ScannerUI): Prom
 		opencvJsLocation: opencvPath
 	})
 
-	const scanner = new Scanner(experience, ui)
+	const scanner = new Scanner(experience, options)
 
 	if (location.hash == '#play') {
 		await scanner.start()
@@ -69,7 +70,7 @@ export async function createScanner(experience: Experience, ui: ScannerUI): Prom
 
 export class Scanner {
 	private readonly experience: Experience
-	private readonly ui: ScannerUI
+	private readonly options: ScannerOptions
 	private _state: State = State.loading
 	private readonly camera: VideoReader
 	private readonly fps: number = 10
@@ -77,27 +78,27 @@ export class Scanner {
 	private readonly color = new Scalar(255, 255, 0)
 	private readonly detector
 
-	constructor(experience: Experience, ui: ScannerUI) {
+	constructor(experience: Experience, options: ScannerOptions) {
 		this.experience = experience
-		this.ui = ui
+		this.options = options
 
 		this.detector = new MarkerDetector(experience)
-		this.camera = new VideoReader(this.ui.video, this.ui.canvas, {
+		this.camera = new VideoReader(options.video, options.canvas, {
 			video: {facingMode: 'environment'},
 			audio: false
 		});
-		ui.stateChanged(State.loading)
+		options.stateChanged(State.loading)
 	}
 
 	private setState(newState: State) {
 		this._state = newState
-		this.ui.stateChanged(newState)
+		this.options.stateChanged(newState)
 	}
 
 	private selectListener = function (): void {
 		this.camera.stop()
 		this.camera.constraints = {
-			video: {deviceId: this.ui.deviceSelect.value}
+			video: {deviceId: this.options.deviceSelect.value}
 		}
 		this.start()
 	}.bind(this)
@@ -113,14 +114,16 @@ export class Scanner {
 				const dst = new Mat(this.camera.width, this.camera.height, CV_8UC1)
 				let lastActionTime: number = 0
 				const actionTimeout = 5000
-				this.ui.stateChanged(State.scanning)
-				this.ui.markerChanged(null)
-				history.replaceState(null, null, '#play');
+				this.options.stateChanged(State.scanning)
+				this.options.markerChanged(null)
+				if (this.options.useUrlHash) {
+					history.replaceState(null, null, '#play');
+				}
 
 				const devices = await navigator.mediaDevices.enumerateDevices()
-				this.ui.deviceSelect.removeEventListener('input', this.selectListener)
-				while (this.ui.deviceSelect.options.length > 0) {
-					this.ui.deviceSelect.remove(0);
+				this.options.deviceSelect.removeEventListener('input', this.selectListener)
+				while (this.options.deviceSelect.options.length > 0) {
+					this.options.deviceSelect.remove(0);
 				}
 				const cameras = devices.filter(device => device.kind == 'videoinput')
 				if (cameras.length > 1) {
@@ -128,11 +131,11 @@ export class Scanner {
 						const opt = document.createElement('option');
 						opt.value = camera.deviceId;
 						opt.innerHTML = camera.label;
-						this.ui.deviceSelect.appendChild(opt);
+						this.options.deviceSelect.appendChild(opt);
 					})
-					this.ui.deviceSelect.value = this.camera.deviceId
-					this.ui.deviceSelect.addEventListener('input', this.selectListener)
-					this.ui.deviceSelect.style.display = ''
+					this.options.deviceSelect.value = this.camera.deviceId
+					this.options.deviceSelect.addEventListener('input', this.selectListener)
+					this.options.deviceSelect.style.display = ''
 				}
 
 				const processVideo = () => {
@@ -146,7 +149,7 @@ export class Scanner {
 						const hierarchy = new Mat()
 						findContours(dst, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE)
 
-						if (this.ui.debugView == true) {
+						if (this.options.debugView == true) {
 							cvtColor(dst, dst, COLOR_GRAY2RGB)
 						} else {
 							cvtColor(src, dst, COLOR_RGBA2RGB)
@@ -156,20 +159,20 @@ export class Scanner {
 						if (marker != null) {
 							if (!marker.equals(this.currentMarker)) {
 								this.currentMarker = marker
-								this.ui.markerChanged(marker)
+								this.options.markerChanged(marker)
 							}
 							lastActionTime = Date.now() + actionTimeout
 							drawContours(dst, contours, marker.nodeIndex, this.color, 2, LINE_8, hierarchy, 100)
 						} else if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
 							lastActionTime = 0
 							this.currentMarker = marker
-							this.ui.markerChanged(null)
+							this.options.markerChanged(null)
 						}
 
 						if (this.camera.shouldFlip) {
 							flip(dst, dst, 1)
 						}
-						imshow(this.ui.canvas, dst)
+						imshow(this.options.canvas, dst)
 						const delay = 1000 / this.fps - (Date.now() - begin)
 						setTimeout(processVideo, delay)
 					} else {
@@ -189,7 +192,9 @@ export class Scanner {
 	}
 
 	stop(): void {
-		history.replaceState(null, null, ' ' + '')
+		if (this.options.useUrlHash) {
+			history.replaceState(null, null, ' ' + '')
+		}
 		this.camera.stop()
 		this.setState(State.idle)
 	}
