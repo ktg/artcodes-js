@@ -15,9 +15,9 @@ export enum State {
 export class ScannerOptions {
 	readonly debugView?: Boolean = false
 	readonly useUrlHash?: Boolean = false
-	readonly video: HTMLVideoElement
-	readonly canvas: HTMLCanvasElement
-	readonly deviceSelect: HTMLSelectElement
+	readonly video!: HTMLVideoElement;
+	readonly canvas!: HTMLCanvasElement
+	readonly deviceSelect: HTMLSelectElement | null = null
 	readonly markerChanged: (marker: Marker | null) => void = () => {
 	}
 	readonly stateChanged: (state: State) => void = () => {
@@ -51,13 +51,13 @@ export class Scanner {
 		this.options.stateChanged(newState)
 	}
 
-	private selectListener = function (): void {
+	private selectListener = () => {
 		this.camera.stop()
 		this.camera.constraints = {
-			video: {deviceId: this.options.deviceSelect.value}
+			video: {deviceId: this.options.deviceSelect?.value}
 		}
 		this.start()
-	}.bind(this)
+	}
 
 	get state(): State {
 		return this._state
@@ -77,21 +77,25 @@ export class Scanner {
 				}
 
 				const devices = await navigator.mediaDevices.enumerateDevices()
-				this.options.deviceSelect.removeEventListener('input', this.selectListener)
-				while (this.options.deviceSelect.options.length > 0) {
-					this.options.deviceSelect.remove(0);
-				}
-				const cameras = devices.filter(device => device.kind == 'videoinput')
-				if (cameras.length > 1) {
-					cameras.forEach(camera => {
-						const opt = document.createElement('option');
-						opt.value = camera.deviceId;
-						opt.innerHTML = camera.label;
-						this.options.deviceSelect.appendChild(opt);
-					})
-					this.options.deviceSelect.value = this.camera.deviceId
-					this.options.deviceSelect.addEventListener('input', this.selectListener)
-					this.options.deviceSelect.style.display = ''
+				if (this.options.deviceSelect != null) {
+					this.options.deviceSelect.removeEventListener('input', this.selectListener)
+					while (this.options.deviceSelect.options.length > 0) {
+						this.options.deviceSelect.remove(0);
+					}
+					const cameras = devices.filter(device => device.kind == 'videoinput')
+					if (cameras.length > 1) {
+						cameras.forEach(camera => {
+							const opt = document.createElement('option');
+							opt.value = camera.deviceId;
+							opt.innerHTML = camera.label;
+							this.options.deviceSelect?.appendChild(opt);
+						})
+						if (this.camera.deviceId != undefined) {
+							this.options.deviceSelect.value = this.camera.deviceId
+						}
+						this.options.deviceSelect.addEventListener('input', this.selectListener)
+						this.options.deviceSelect.style.display = ''
+					}
 				}
 
 				const processVideo = () => {

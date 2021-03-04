@@ -20,7 +20,7 @@ declare class Marker {
     regions: number[];
     action: Action;
     constructor(nodeIndex: number, regions: number[], action: Action);
-    equals(marker: Marker): boolean;
+    equals(marker: Marker | null): boolean;
 }
 declare enum State {
     loading = 0,
@@ -32,7 +32,7 @@ declare class ScannerOptions {
     readonly useUrlHash?: Boolean;
     readonly video: HTMLVideoElement;
     readonly canvas: HTMLCanvasElement;
-    readonly deviceSelect: HTMLSelectElement;
+    readonly deviceSelect: HTMLSelectElement | null;
     readonly markerChanged: (marker: Marker | null) => void;
     readonly stateChanged: (state: State) => void;
 }

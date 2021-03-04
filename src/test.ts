@@ -14,7 +14,7 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 	const buttonStop = document.getElementById('artc_buttonStop') as HTMLButtonElement
 
 	const image = document.getElementById('artc_image') as HTMLImageElement
-	const placeholder = document.getElementById('artc_placeholder')
+	const placeholder = document.getElementById('artc_placeholder')!!
 	if (experience.image != null && experience.image != '') {
 		image.src = experience.image
 		image.style.display = ''
@@ -30,7 +30,7 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 	new MDCRipple(buttonStop)
 
 	const deviceSelect = document.getElementById('artc_deviceSelect') as HTMLSelectElement
-	const loadingIndicator = document.getElementById('artc_loadingIndicator')
+	const loadingIndicator = document.getElementById('artc_loadingIndicator')!!
 	const circularProgress = new MDCCircularProgress(loadingIndicator)
 	circularProgress.determinate = false
 
@@ -131,5 +131,5 @@ window.addEventListener('load', () => {
 		}],
 	}
 
-	buildScan(document.getElementById('content'), experience)
+	buildScan(document.getElementById('content')!!, experience)
 })

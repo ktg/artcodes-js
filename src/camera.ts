@@ -21,7 +21,7 @@ export class VideoReader {
 		}
 	}
 
-	public get deviceId(): string {
+	public get deviceId(): string | undefined {
 		return this._deviceId
 	}
 
@@ -32,7 +32,7 @@ export class VideoReader {
 
 	private mat: Mat
 	private settings: MediaTrackSettings = {}
-	private _deviceId: string = ""
+	private _deviceId: string | undefined
 	private readonly cap: VideoCapture
 	private streaming: boolean = false
 	protected stream: MediaStream | undefined;
@@ -42,7 +42,7 @@ export class VideoReader {
 		this.video = video
 		this.cap = new cv.VideoCapture(video)
 		this.canvas = canvas
-		this.mat = null
+		this.mat = cv.Mat.zeros(10, 10, cv.CV_8UC4)
 		this.streaming = false
 	}
 
@@ -56,30 +56,32 @@ export class VideoReader {
 	}
 
 	get width(): number {
-		return this.settings.width
+		return this.settings.width!!
 	}
 
 	get height(): number {
-		return this.settings.height
+		return this.settings.height!!
 	}
 
 	async start(): Promise<void> {
 		this.stream = this.video.srcObject = await navigator.mediaDevices.getUserMedia(this._constraints)
 		this._deviceId = this.stream.getVideoTracks()[0].getCapabilities().deviceId
 		this.settings = this.stream.getVideoTracks()[0].getSettings()
-		this.video.width = this.settings.width
-		this.video.height = this.settings.height
+		const width = this.settings.width!!
+		const height = this.settings.height!!
+		this.video.width = width
+		this.video.height = height
 		await this.video.play()
-		this.canvas.width = this.settings.width
-		this.canvas.height = this.settings.height
-		this.mat = cv.Mat.zeros(this.settings.height, this.settings.width, cv.CV_8UC4)
+		this.canvas.width = width
+		this.canvas.height = height
+		this.mat = cv.Mat.zeros(height, width, cv.CV_8UC4)
 		this.streaming = true
 	}
 
 	stop(): void {
 		if (this.streaming) {
-			this.stream.getVideoTracks().forEach(t => t.stop())
-			this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height)
+			this.stream?.getVideoTracks().forEach(t => t.stop())
+			this.canvas.getContext('2d')?.clearRect(0, 0, this.canvas.width, this.canvas.height)
 			this.video.pause()
 			this.streaming = false
 			this.mat.delete()

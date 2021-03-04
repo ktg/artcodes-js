@@ -3,7 +3,7 @@
 		"src/**/*.*"
 	],
 	"compilerOptions": {
-		//"strict": true,
+		"strict": true,
 		"target": "es2017",
 		"module": "esnext",
 		"moduleResolution": "Node",

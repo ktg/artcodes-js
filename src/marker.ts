@@ -11,7 +11,7 @@ export class Marker {
 		this.action = action
 	}
 
-	equals(marker: Marker): boolean {
+	equals(marker: Marker | null): boolean {
 		return marker != null && (this.regions.length == marker.regions.length) && this.regions.every(function(element, index) {
 			return element === marker.regions[index];
 		});
