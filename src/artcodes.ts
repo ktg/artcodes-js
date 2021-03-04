@@ -67,7 +67,6 @@ export class Scanner {
 		if (this._state != State.scanning) {
 			try {
 				await this.camera.start()
-				console.log(this.camera.width);
 				const dst = new cv.Mat(this.camera.width, this.camera.height, cv.CV_8UC1)
 				let lastActionTime: number = 0
 				const actionTimeout = 5000

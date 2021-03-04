@@ -28,17 +28,13 @@ export class VideoReader {
 	private readonly video: HTMLVideoElement
 	private readonly canvas: HTMLCanvasElement
 
-	private _constraints: MediaStreamConstraints | null = null
+	private _constraints: MediaStreamConstraints = {}
 
 	private mat: Mat
-	private settings: MediaTrackSettings
+	private settings: MediaTrackSettings = {}
 	private _deviceId: string = ""
 	private readonly cap: VideoCapture
-	private streaming: boolean
-	// private static defaultOptions: Options = {
-	// 	size: 'video',
-	// 	constraints: {}
-	// };
+	private streaming: boolean = false
 	protected stream: MediaStream | undefined;
 
 	constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement, constraints: MediaStreamConstraints) {
