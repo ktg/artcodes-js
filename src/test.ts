@@ -1,7 +1,7 @@
 import {MDCCircularProgress} from '@material/circular-progress'
 import {MDCRipple} from '@material/ripple'
 
-import {State} from "./artcodes";
+import {ScannerState} from "./artcodes";
 import {Experience} from "./experience";
 import {createScanner} from "./index";
 
@@ -42,20 +42,20 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 				video: video,
 				deviceSelect: deviceSelect,
 				stateChanged: (state) => {
-					if (state == State.idle) {
+					if (state == ScannerState.idle) {
 						placeholder.style.display = ''
 						canvas.style.display = 'none'
 						buttonStop.style.display = 'none'
 						buttonStart.style.display = ''
 						buttonStart.classList.remove('mdc-fab--exited')
 						loadingIndicator.classList.add('mdc-circular-progress--closed')
-					} else if (state == State.loading) {
+					} else if (state == ScannerState.loading) {
 						placeholder.style.display = ''
 						canvas.style.display = 'none'
 						buttonStop.style.display = 'none'
 						buttonStart.classList.add('mdc-fab--exited')
 						loadingIndicator.classList.remove('mdc-circular-progress--closed')
-					} else if (state == State.scanning) {
+					} else if (state == ScannerState.scanning) {
 						placeholder.style.display = 'none'
 						canvas.style.display = ''
 						buttonStop.style.display = ''

@@ -21,7 +21,7 @@ declare class Marker {
     constructor(nodeIndex: number, regions: number[], action: Action);
     equals(marker: Marker | null): boolean;
 }
-declare enum State {
+declare enum ScannerState {
     loading = 0,
     idle = 1,
     scanning = 2
@@ -31,9 +31,9 @@ interface ScannerOptions {
     readonly useUrlHash?: Boolean;
     readonly video: HTMLVideoElement;
     readonly canvas: HTMLCanvasElement;
-    readonly deviceSelect: HTMLSelectElement | null;
+    readonly deviceSelect?: HTMLSelectElement;
     readonly markerChanged?: (marker: Marker | null) => void;
-    readonly stateChanged?: (state: State) => void;
+    readonly stateChanged?: (state: ScannerState) => void;
 }
 declare class Scanner {
     private readonly experience;
@@ -47,9 +47,9 @@ declare class Scanner {
     constructor(experience: Experience, options: ScannerOptions);
     private setState;
     private selectListener;
-    get state(): State;
+    get state(): ScannerState;
     start(): Promise<void>;
     stop(): void;
 }
 declare function createScanner(experience: Experience, options: ScannerOptions): Promise<Scanner>;
-export { createScanner };
+export { Experience, Action, Scanner, ScannerOptions, ScannerState, Settings, Marker, createScanner };

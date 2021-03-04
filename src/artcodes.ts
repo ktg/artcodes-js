@@ -6,7 +6,7 @@ import {MarkerDetector} from './markerDetector'
 
 declare var cv: Mirada.CV
 
-export enum State {
+export enum ScannerState {
 	loading,
 	idle,
 	scanning
@@ -17,15 +17,15 @@ export interface ScannerOptions {
 	readonly useUrlHash?: Boolean
 	readonly video: HTMLVideoElement;
 	readonly canvas: HTMLCanvasElement
-	readonly deviceSelect: HTMLSelectElement | null
+	readonly deviceSelect?: HTMLSelectElement
 	readonly markerChanged?: (marker: Marker | null) => void
-	readonly stateChanged?: (state: State) => void
+	readonly stateChanged?: (state: ScannerState) => void
 }
 
 export class Scanner {
 	private readonly experience: Experience
 	private readonly options: ScannerOptions
-	private _state: State = State.loading
+	private _state: ScannerState = ScannerState.loading
 	private readonly camera: VideoReader
 	private readonly fps: number = 10
 	private currentMarker: Marker | null = null
@@ -41,10 +41,10 @@ export class Scanner {
 			video: {facingMode: 'environment'},
 			audio: false
 		});
-		options.stateChanged?.(State.loading)
+		options.stateChanged?.(ScannerState.loading)
 	}
 
-	private setState(newState: State) {
+	private setState(newState: ScannerState) {
 		this._state = newState
 		this.options.stateChanged?.(newState)
 	}
@@ -57,12 +57,12 @@ export class Scanner {
 		this.start()
 	}
 
-	get state(): State {
+	get state(): ScannerState {
 		return this._state
 	}
 
 	async start(): Promise<void> {
-		if (this._state != State.scanning) {
+		if (this._state != ScannerState.scanning) {
 			try {
 				await this.camera.start()
 				const dst = new cv.Mat(this.camera.width, this.camera.height, cv.CV_8UC1)
@@ -70,7 +70,7 @@ export class Scanner {
 				const actionTimeout = this.experience.settings?.actionTimout || 5000
 				const threshSize = this.experience.settings?.threshSize || 101
 				const threshConst = this.experience.settings?.threshConst || 1
-				this.options.stateChanged?.(State.scanning)
+				this.options.stateChanged?.(ScannerState.scanning)
 				this.options.markerChanged?.(null)
 				if (this.options.useUrlHash) {
 					history.replaceState(null, "", '#play');
@@ -137,7 +137,7 @@ export class Scanner {
 						setTimeout(processVideo, delay)
 					} else {
 						dst.delete()
-						this.setState(State.idle)
+						this.setState(ScannerState.idle)
 					}
 				}
 
@@ -156,6 +156,6 @@ export class Scanner {
 			history.replaceState(null, "", ' ' + '')
 		}
 		this.camera.stop()
-		this.setState(State.idle)
+		this.setState(ScannerState.idle)
 	}
 }

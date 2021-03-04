@@ -1,6 +1,9 @@
 import {loadOpencv} from "mirada";
-import {Scanner, ScannerOptions} from "./artcodes";
-import {Experience} from "./experience";
+import {Scanner, ScannerState, ScannerOptions} from "./artcodes";
+import {Experience, Action, Settings} from "./experience";
+import {Marker} from "./marker";
+
+export {Experience, Action, Scanner, ScannerOptions, ScannerState, Settings, Marker}
 
 export async function createScanner(experience: Experience, options: ScannerOptions): Promise<Scanner> {
 	if (location.protocol != 'https:' && location.hostname != 'localhost') {
