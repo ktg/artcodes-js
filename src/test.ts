@@ -1,8 +1,9 @@
-import {MDCRipple} from '@material/ripple'
 import {MDCCircularProgress} from '@material/circular-progress'
+import {MDCRipple} from '@material/ripple'
 
-import {createScanner, State} from "./artcodes";
+import {State} from "./artcodes";
 import {Experience, Settings} from "./experience";
+import {createScanner} from "./index";
 
 export async function buildScan(root: HTMLElement, experience: Experience) {
 	const video = document.getElementById('artc_videoInput') as HTMLVideoElement
@@ -75,7 +76,7 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 				}
 			}
 		)
-		
+
 		buttonStart.addEventListener('click', () => {
 			scanner.start()
 		})
@@ -92,7 +93,6 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 		console.log(e)
 	}
 }
-
 
 
 window.addEventListener('load', () => {

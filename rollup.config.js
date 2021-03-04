@@ -1,22 +1,23 @@
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import commonjs from '@rollup/plugin-commonjs';
 import {terser} from 'rollup-plugin-terser';
 import ts from "@wessberg/rollup-plugin-ts";
 import copy from 'rollup-plugin-copy'
+import commonjs from "@rollup/plugin-commonjs";
 
-
-const mode = process.env.NODE_ENV;
+const mode = process.env.BUILD;
+console.log(mode);
 const dev = mode === 'development';
 const sourcemap = dev ? "inline" : false;
 
-
 export default [
 	{
-		input: "src/artcodes.ts",
+		input: "src/index.ts",
 		output: {
 			file: 'dist/artcodes.js',
 			format: 'cjs',
+			exports: "named",
+			sourcemap: sourcemap
 		},
 		plugins: [
 			replace({
@@ -25,24 +26,29 @@ export default [
 				'process.env.NODE_ENV': JSON.stringify(mode)
 			}),
 			resolve({
-				browser: true
+				browser: true,
 			}),
 			commonjs({
 				sourceMap: !!sourcemap,
 			}),
-			ts(),
+			ts({
+				tsconfig: {
+					target: "es2017",
+					declaration: true,
+				}
+			}),
 			!dev && terser({
 				module: true
 			})
 		],
 
-		preserveEntrySignatures: false,
+		preserveEntrySignatures: true,
 	},
 	{
 		input: "src/test.ts",
 		output: {
 			file: 'build/main.js',
-			format: 'es',
+			format: 'iife',
 		},
 		plugins: [
 			replace({
@@ -51,7 +57,7 @@ export default [
 				'process.env.NODE_ENV': JSON.stringify(mode)
 			}),
 			resolve({
-				browser: true
+				browser: true,
 			}),
 			commonjs({
 				sourceMap: !!sourcemap,
@@ -69,5 +75,4 @@ export default [
 
 		preserveEntrySignatures: false,
 	},
-
 ];

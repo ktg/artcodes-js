@@ -1,9 +1,9 @@
 export class Action {
-	readonly codes: Array<string>
+	readonly codes: Array<string> = []
 	//readonly match: string
-	readonly name: string
+	readonly name: string = "Temp"
 	//readonly showDetails: boolean
-	readonly url: string
+	readonly url: string = ""
 }
 
 export class Settings {
@@ -12,9 +12,9 @@ export class Settings {
 }
 
 export class Experience {
-	readonly name: string
-	readonly image: string
-	readonly actions: Array<Action>
+	readonly name: string | null = null
+	readonly image: string | null = null
+	readonly actions: Array<Action> = []
 	readonly settings: Settings = new Settings()
 	//readonly author: string
 	//readonly description: string

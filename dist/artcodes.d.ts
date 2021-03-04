@@ -1,6 +1,8 @@
 declare class Action {
     readonly codes: Array<string>;
+    //readonly match: string
     readonly name: string;
+    //readonly showDetails: boolean
     readonly url: string;
 }
 declare class Settings {
@@ -8,8 +10,8 @@ declare class Settings {
     readonly threshConst: number;
 }
 declare class Experience {
-    readonly name: string;
-    readonly image: string;
+    readonly name: string | null;
+    readonly image: string | null;
     readonly actions: Array<Action>;
     readonly settings: Settings;
 }
@@ -31,10 +33,9 @@ declare class ScannerOptions {
     readonly video: HTMLVideoElement;
     readonly canvas: HTMLCanvasElement;
     readonly deviceSelect: HTMLSelectElement;
-    readonly markerChanged: (marker: Marker) => void;
+    readonly markerChanged: (marker: Marker | null) => void;
     readonly stateChanged: (state: State) => void;
 }
-declare function createScanner(experience: Experience, options: ScannerOptions): Promise<Scanner>;
 declare class Scanner {
     private readonly experience;
     private readonly options;
@@ -51,4 +52,5 @@ declare class Scanner {
     start(): Promise<void>;
     stop(): void;
 }
-export { State, ScannerOptions, createScanner, Scanner };
+declare function createScanner(experience: Experience, options: ScannerOptions): Promise<Scanner>;
+export { createScanner };

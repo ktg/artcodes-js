@@ -1,11 +1,10 @@
-import {Mat} from "mirada";
+import type {Mat} from "mirada";
+import type {Action, Experience} from "./experience";
 import {Marker} from "./marker";
-import type {Experience, Action} from "./experience";
 
 const NEXT_NODE = 0;
-//const PREV_NODE = 1;
 const FIRST_CHILD_NODE = 2;
-
+//const PREV_NODE = 1;
 //const PARENT_NODE = 3;
 
 class MarkerCode {
@@ -56,13 +55,14 @@ export class MarkerDetector {
 		//console.log(this)
 	}
 
-	findMarker(hierarchy: Mat) {
+	findMarker(hierarchy: Mat): Marker | null {
 		for (let i = 0; i < hierarchy.cols; ++i) {
 			let result = this.createMarkerForNode(i, hierarchy)
 			if (result != null) {
 				return result;
 			}
 		}
+		return null
 	}
 
 	private static getFirstChild(hierarchy: Mat, nodeIndex: number): number {
@@ -105,7 +105,7 @@ export class MarkerDetector {
 		return null;
 	}
 
-	private countLeafs(nodeIndex: number, hierarchy: Mat): number {
+	private countLeafs(nodeIndex: number, hierarchy: Mat): number | null {
 		let leafCount = 0;
 		let currentNodeIndex = MarkerDetector.getFirstChild(hierarchy, nodeIndex)
 		while (currentNodeIndex >= 0) {

@@ -1,5 +1,5 @@
-import type {Mat, VideoCapture} from "mirada";
 import type * as Mirada from "mirada";
+import type {Mat, VideoCapture} from "mirada";
 
 declare var cv: Mirada.CV
 
@@ -28,13 +28,12 @@ export class VideoReader {
 	private readonly video: HTMLVideoElement
 	private readonly canvas: HTMLCanvasElement
 
-	private _constraints: MediaStreamConstraints
+	private _constraints: MediaStreamConstraints | null = null
 
-	//private o: Options;
-	private mat: Mat;
-	private settings: MediaTrackSettings;
-	private _deviceId: string;
-	private readonly cap: VideoCapture;
+	private mat: Mat
+	private settings: MediaTrackSettings
+	private _deviceId: string = ""
+	private readonly cap: VideoCapture
 	private streaming: boolean
 	// private static defaultOptions: Options = {
 	// 	size: 'video',

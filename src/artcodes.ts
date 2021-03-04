@@ -1,28 +1,10 @@
-import {
-	loadOpencv,
-	Scalar,
-	Mat,
-	MatVector,
-	cvtColor,
-	adaptiveThreshold,
-	findContours,
-	drawContours,
-	flip,
-	imshow,
-	ADAPTIVE_THRESH_MEAN_C,
-	CHAIN_APPROX_SIMPLE,
-	COLOR_RGBA2GRAY,
-	COLOR_GRAY2RGB,
-	COLOR_RGBA2RGB,
-	CV_8UC1,
-	LINE_8,
-	THRESH_BINARY,
-	RETR_TREE
-} from 'mirada'
-import type {Marker} from "./marker"
+import * as Mirada from "mirada";
 import {VideoReader} from "./camera"
-import {MarkerDetector} from './markerDetector'
 import type {Experience} from "./experience";
+import type {Marker} from "./marker"
+import {MarkerDetector} from './markerDetector'
+
+declare var cv: Mirada.CV
 
 export enum State {
 	loading,
@@ -36,36 +18,10 @@ export class ScannerOptions {
 	readonly video: HTMLVideoElement
 	readonly canvas: HTMLCanvasElement
 	readonly deviceSelect: HTMLSelectElement
-	readonly markerChanged: (marker: Marker) => void
-	readonly stateChanged: (state: State) => void
-}
-
-export async function createScanner(experience: Experience, options: ScannerOptions): Promise<Scanner> {
-	if (location.protocol != 'https:' && location.host != 'localhost') {
-		console.warn("Artcodes requires https in order to access camera")
-		return null
+	readonly markerChanged: (marker: Marker | null) => void = () => {
 	}
-	let opencvPath = '/opencv.js'
-	const scripts = document.querySelectorAll<HTMLScriptElement>('script');
-	scripts.forEach(el => {
-		const index = el.src.indexOf('/artcodes.')
-		if (index > 0) {
-			opencvPath = el.src.slice(0, index) + '/opencv.js'
-		}
-	});
-
-	await loadOpencv({
-		opencvJsLocation: opencvPath
-	})
-
-	const scanner = new Scanner(experience, options)
-
-	if (location.hash == '#play') {
-		await scanner.start()
-	} else {
-		scanner.stop()
+	readonly stateChanged: (state: State) => void = () => {
 	}
-	return scanner
 }
 
 export class Scanner {
@@ -74,8 +30,8 @@ export class Scanner {
 	private _state: State = State.loading
 	private readonly camera: VideoReader
 	private readonly fps: number = 10
-	private currentMarker: Marker = null
-	private readonly color = new Scalar(255, 255, 0)
+	private currentMarker: Marker | null = null
+	private readonly color = new cv.Scalar(255, 255, 0)
 	private readonly detector
 
 	constructor(experience: Experience, options: ScannerOptions) {
@@ -111,13 +67,14 @@ export class Scanner {
 		if (this._state != State.scanning) {
 			try {
 				await this.camera.start()
-				const dst = new Mat(this.camera.width, this.camera.height, CV_8UC1)
+				console.log(this.camera.width);
+				const dst = new cv.Mat(this.camera.width, this.camera.height, cv.CV_8UC1)
 				let lastActionTime: number = 0
 				const actionTimeout = 5000
 				this.options.stateChanged(State.scanning)
 				this.options.markerChanged(null)
 				if (this.options.useUrlHash) {
-					history.replaceState(null, null, '#play');
+					history.replaceState(null, "", '#play');
 				}
 
 				const devices = await navigator.mediaDevices.enumerateDevices()
@@ -142,17 +99,17 @@ export class Scanner {
 					if (this.camera.isStreaming) {
 						const begin = Date.now()
 						const src = this.camera.read()
-						cvtColor(src, dst, COLOR_RGBA2GRAY)
-						adaptiveThreshold(dst, dst, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, this.experience.settings.threshSize, this.experience.settings.threshConst)
+						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
+						cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, this.experience.settings.threshSize, this.experience.settings.threshConst)
 
-						const contours = new MatVector()
-						const hierarchy = new Mat()
-						findContours(dst, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE)
+						const contours = new cv.MatVector()
+						const hierarchy = new cv.Mat()
+						cv.findContours(dst, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
-						if (this.options.debugView == true) {
-							cvtColor(dst, dst, COLOR_GRAY2RGB)
+						if (this.options.debugView) {
+							cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGB)
 						} else {
-							cvtColor(src, dst, COLOR_RGBA2RGB)
+							cv.cvtColor(src, dst, cv.COLOR_RGBA2RGB)
 						}
 
 						const marker = this.detector.findMarker(hierarchy)
@@ -162,7 +119,7 @@ export class Scanner {
 								this.options.markerChanged(marker)
 							}
 							lastActionTime = Date.now() + actionTimeout
-							drawContours(dst, contours, marker.nodeIndex, this.color, 2, LINE_8, hierarchy, 100)
+							cv.drawContours(dst, contours, marker.nodeIndex, this.color, 2, cv.LINE_8, hierarchy, 100)
 						} else if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
 							lastActionTime = 0
 							this.currentMarker = marker
@@ -170,9 +127,9 @@ export class Scanner {
 						}
 
 						if (this.camera.shouldFlip) {
-							flip(dst, dst, 1)
+							cv.flip(dst, dst, 1)
 						}
-						imshow(this.options.canvas, dst)
+						cv.imshow(this.options.canvas, dst)
 						const delay = 1000 / this.fps - (Date.now() - begin)
 						setTimeout(processVideo, delay)
 					} else {
@@ -193,7 +150,7 @@ export class Scanner {
 
 	stop(): void {
 		if (this.options.useUrlHash) {
-			history.replaceState(null, null, ' ' + '')
+			history.replaceState(null, "", ' ' + '')
 		}
 		this.camera.stop()
 		this.setState(State.idle)
