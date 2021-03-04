@@ -1,19 +1,18 @@
-declare class Action {
-    readonly codes: Array<string>;
-    //readonly match: string
+interface Action {
     readonly name: string;
-    //readonly showDetails: boolean
     readonly url: string;
+    readonly codes: Array<string>;
 }
-declare class Settings {
-    readonly threshSize: number;
-    readonly threshConst: number;
+interface Settings {
+    readonly threshSize?: number;
+    readonly threshConst?: number;
+    readonly actionTimout?: number;
 }
-declare class Experience {
-    readonly name: string | null;
-    readonly image: string | null;
+interface Experience {
+    readonly name?: string;
+    readonly image?: string;
     readonly actions: Array<Action>;
-    readonly settings: Settings;
+    readonly settings?: Settings;
 }
 declare class Marker {
     nodeIndex: number;
@@ -27,14 +26,14 @@ declare enum State {
     idle = 1,
     scanning = 2
 }
-declare class ScannerOptions {
+interface ScannerOptions {
     readonly debugView?: Boolean;
     readonly useUrlHash?: Boolean;
     readonly video: HTMLVideoElement;
     readonly canvas: HTMLCanvasElement;
     readonly deviceSelect: HTMLSelectElement | null;
-    readonly markerChanged: (marker: Marker | null) => void;
-    readonly stateChanged: (state: State) => void;
+    readonly markerChanged?: (marker: Marker | null) => void;
+    readonly stateChanged?: (state: State) => void;
 }
 declare class Scanner {
     private readonly experience;

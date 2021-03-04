@@ -2,7 +2,7 @@ import {MDCCircularProgress} from '@material/circular-progress'
 import {MDCRipple} from '@material/ripple'
 
 import {State} from "./artcodes";
-import {Experience, Settings} from "./experience";
+import {Experience} from "./experience";
 import {createScanner} from "./index";
 
 export async function buildScan(root: HTMLElement, experience: Experience) {
@@ -97,37 +97,36 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 
 window.addEventListener('load', () => {
 	const experience: Experience = {
-		"name": " Carolan Performance",
-		"image": "https://carolanguitar.files.wordpress.com/2014/10/bottom-to-top.jpg",
-		"settings": new Settings(),
-		"actions": [{
-			"name": "Carolan Guitar",
-			"url": "https://carolanguitar.com",
-			"codes": ["1:1:1:1:2"]
+		name: " Carolan Performance",
+		image: "https://carolanguitar.files.wordpress.com/2014/10/bottom-to-top.jpg",
+		actions: [{
+			name: "Carolan Guitar",
+			url: "https://carolanguitar.com",
+			codes: ["1:1:1:1:2"]
 		}, {
-			"name": "Tech Specs",
-			"url": "https://carolanguitar.com/tech-spec/",
-			"codes": ["1:1:1:1:1"]
+			name: "Tech Specs",
+			url: "https://carolanguitar.com/tech-spec/",
+			codes: ["1:1:1:1:1"]
 		}, {
-			"name": "User Guide",
-			"url": "https://carolanguitar.com/user-guide/",
-			"codes": ["1:1:2:3:5"]
+			name: "User Guide",
+			url: "https://carolanguitar.com/user-guide/",
+			codes: ["1:1:2:3:5"]
 		}, {
-			"name": "Specifications",
-			"url": "http://wp.me/P4QC5t-3T",
-			"codes": ["1:1:2:4:4"]
+			name: "Specifications",
+			url: "http://wp.me/P4QC5t-3T",
+			codes: ["1:1:2:4:4"]
 		}, {
-			"name": "Learn about Artcodes",
-			"url": "http://www.artcodes.co.uk",
-			"codes": ["1:1:5:5:6"]
+			name: "Learn about Artcodes",
+			url: "http://www.artcodes.co.uk",
+			codes: ["1:1:5:5:6"]
 		}, {
-			"name": "Let's Play",
-			"url": "https://www.youtube.com/watch?v=lZaZwAXwox4",
-			"codes": ["1:1:1:4:5"]
+			name: "Let's Play",
+			url: "https://www.youtube.com/watch?v=lZaZwAXwox4",
+			codes: ["1:1:1:4:5"]
 		}, {
-			"name": "Playlist",
-			"url": "https://www.youtube.com/playlist?list=PLPvnQgbeSXV5tJzd4hZ9AFE0qF7oCuV2G",
-			"codes": ["1:1:3:3:4"]
+			name: "Playlist",
+			url: "https://www.youtube.com/playlist?list=PLPvnQgbeSXV5tJzd4hZ9AFE0qF7oCuV2G",
+			codes: ["1:1:3:3:4"]
 		}],
 	}
 
