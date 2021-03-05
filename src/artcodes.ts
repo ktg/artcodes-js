@@ -64,24 +64,25 @@ export class Scanner {
 	async start(): Promise<void> {
 		if (this._state != ScannerState.scanning) {
 			try {
-				await this.camera.start()
-				const dst = new cv.Mat(this.camera.width, this.camera.height, cv.CV_8UC1)
-				let lastActionTime: number = 0
 				const actionTimeout = this.experience.settings?.actionTimout || 5000
 				const threshSize = this.experience.settings?.threshSize || 101
 				const threshConst = this.experience.settings?.threshConst || 1
+
+				const videoProps = await this.camera.start()
+				const dst = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC1)
+				let lastActionTime: number = 0
 				this.options.stateChanged?.(ScannerState.scanning)
 				this.options.markerChanged?.(null)
 				if (this.options.useUrlHash) {
 					history.replaceState(null, "", '#play');
 				}
 
-				const devices = await navigator.mediaDevices.enumerateDevices()
 				if (this.options.deviceSelect != null) {
 					this.options.deviceSelect.removeEventListener('input', this.selectListener)
 					while (this.options.deviceSelect.options.length > 0) {
 						this.options.deviceSelect.remove(0);
 					}
+					const devices = await navigator.mediaDevices.enumerateDevices()
 					const cameras = devices.filter(device => device.kind == 'videoinput')
 					if (cameras.length > 1) {
 						cameras.forEach(camera => {
@@ -102,6 +103,7 @@ export class Scanner {
 					if (this.camera.isStreaming) {
 						const begin = Date.now()
 						const src = this.camera.read()
+
 						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
 						cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, threshSize, threshConst)
 
@@ -129,7 +131,7 @@ export class Scanner {
 							this.options.markerChanged?.(null)
 						}
 
-						if (this.camera.shouldFlip) {
+						if (videoProps.shouldFlip) {
 							cv.flip(dst, dst, 1)
 						}
 						cv.imshow(this.options.canvas, dst)
@@ -142,7 +144,6 @@ export class Scanner {
 				}
 
 				processVideo()
-
 			} catch (error) {
 				console.log('error: ', error.message, error.name);
 				console.trace(error)

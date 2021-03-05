@@ -3,6 +3,12 @@ import type {Mat, VideoCapture} from "mirada";
 
 declare var cv: Mirada.CV
 
+export interface VideoSettings {
+	width: number
+	height: number
+	shouldFlip: boolean
+}
+
 export class VideoReader {
 	public get isStreaming(): boolean {
 		return this.streaming
@@ -28,17 +34,16 @@ export class VideoReader {
 	private readonly video: HTMLVideoElement
 	private readonly canvas: HTMLCanvasElement
 
-	private _constraints: MediaStreamConstraints = {}
+	private _constraints: MediaStreamConstraints
 
 	private mat: Mat
-	private settings: MediaTrackSettings = {}
 	private _deviceId: string | undefined
 	private readonly cap: VideoCapture
 	private streaming: boolean = false
 	protected stream: MediaStream | undefined;
 
 	constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement, constraints: MediaStreamConstraints) {
-		this.constraints = constraints
+		this._constraints = constraints
 		this.video = video
 		this.cap = new cv.VideoCapture(video)
 		this.canvas = canvas
@@ -51,24 +56,12 @@ export class VideoReader {
 		return this.mat
 	}
 
-	get shouldFlip(): boolean {
-		return this.settings.facingMode == "user";
-	}
-
-	get width(): number {
-		return this.settings.width!!
-	}
-
-	get height(): number {
-		return this.settings.height!!
-	}
-
-	async start(): Promise<void> {
+	async start(): Promise<VideoSettings> {
 		this.stream = this.video.srcObject = await navigator.mediaDevices.getUserMedia(this._constraints)
-		this._deviceId = this.stream.getVideoTracks()[0].getCapabilities().deviceId
-		this.settings = this.stream.getVideoTracks()[0].getSettings()
-		const width = this.settings.width!!
-		const height = this.settings.height!!
+		const settings = this.stream.getVideoTracks()[0].getSettings()
+		this._deviceId = settings.deviceId
+		const width = settings.width!!
+		const height = settings.height!!
 		this.video.width = width
 		this.video.height = height
 		await this.video.play()
@@ -76,6 +69,7 @@ export class VideoReader {
 		this.canvas.height = height
 		this.mat = cv.Mat.zeros(height, width, cv.CV_8UC4)
 		this.streaming = true
+		return {width: width, height: height, shouldFlip: settings.facingMode == "user"}
 	}
 
 	stop(): void {
