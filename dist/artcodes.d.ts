@@ -29,8 +29,8 @@ declare enum ScannerState {
 interface ScannerOptions {
     readonly debugView?: Boolean;
     readonly useUrlHash?: Boolean;
-    readonly video: HTMLVideoElement;
     readonly canvas: HTMLCanvasElement;
+    readonly outlineColor?: string;
     readonly deviceSelect?: HTMLSelectElement;
     readonly markerChanged?: (marker: Marker | null) => void;
     readonly stateChanged?: (state: ScannerState) => void;
@@ -42,7 +42,6 @@ declare class Scanner {
     private readonly camera;
     private readonly fps;
     private currentMarker;
-    private readonly color;
     private readonly detector;
     constructor(experience: Experience, options: ScannerOptions);
     private setState;

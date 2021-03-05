@@ -4,7 +4,6 @@ import {terser} from 'rollup-plugin-terser';
 import ts from "@wessberg/rollup-plugin-ts";
 import copy from 'rollup-plugin-copy'
 import commonjs from "@rollup/plugin-commonjs";
-import autoExternal from 'rollup-plugin-auto-external';
 
 const mode = process.env.BUILD;
 console.log(mode);
@@ -22,18 +21,6 @@ export default [
 		},
 		external: ['mirada'],
 		plugins: [
-			autoExternal(),
-			// replace({
-			// 	'process.browser': true,
-			// 	preventAssignment: true,
-			// 	'process.env.NODE_ENV': JSON.stringify(mode)
-			// }),
-			// resolve({
-			// 	browser: true,
-			// }),
-			// commonjs({
-			// 	sourceMap: !!sourcemap,
-			// }),
 			ts({
 				tsconfig: {
 					target: "es2017",

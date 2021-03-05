@@ -6,7 +6,6 @@ import {Experience} from "./experience";
 import {createScanner} from "./index";
 
 export async function buildScan(root: HTMLElement, experience: Experience) {
-	const video = document.getElementById('artc_videoInput') as HTMLVideoElement
 	const canvas = document.getElementById('artc_canvasOutput') as HTMLCanvasElement
 
 	const buttonAction = document.getElementById('artc_buttonAction') as HTMLButtonElement
@@ -39,7 +38,6 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 			experience,
 			{
 				canvas: canvas,
-				video: video,
 				deviceSelect: deviceSelect,
 				stateChanged: (state) => {
 					if (state == ScannerState.idle) {

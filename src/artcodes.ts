@@ -1,4 +1,5 @@
 import * as Mirada from "mirada";
+import {Scalar} from "mirada";
 import {VideoReader} from "./camera"
 import type {Experience} from "./experience";
 import type {Marker} from "./marker"
@@ -15,11 +16,31 @@ export enum ScannerState {
 export interface ScannerOptions {
 	readonly debugView?: Boolean
 	readonly useUrlHash?: Boolean
-	readonly video: HTMLVideoElement;
 	readonly canvas: HTMLCanvasElement
+	readonly outlineColor?: string
 	readonly deviceSelect?: HTMLSelectElement
 	readonly markerChanged?: (marker: Marker | null) => void
 	readonly stateChanged?: (state: ScannerState) => void
+}
+
+function parseColour(input: string): Array<number> {
+	if (input.substr(0, 1) == "#") {
+		const collen = (input.length - 1) / 3;
+		const fact = [17, 1, 0.062272][collen - 1];
+		return [
+			Math.round(parseInt(input.substr(1, collen), 16) * fact),
+			Math.round(parseInt(input.substr(1 + collen, collen), 16) * fact),
+			Math.round(parseInt(input.substr(1 + 2 * collen, collen), 16) * fact)
+		];
+	} else return input.split("(")[1].split(")")[0].split(",").map(x => +x);
+}
+
+function parseColourToScalar(input: string | undefined): Scalar {
+	if (input == null) {
+		return new cv.Scalar(255, 255, 0, 255)
+	}
+	const array = parseColour(input)
+	return new cv.Scalar(array[0], array[1], array[2], 255)
 }
 
 export class Scanner {
@@ -29,7 +50,6 @@ export class Scanner {
 	private readonly camera: VideoReader
 	private readonly fps: number = 10
 	private currentMarker: Marker | null = null
-	private readonly color = new cv.Scalar(255, 255, 0)
 	private readonly detector
 
 	constructor(experience: Experience, options: ScannerOptions) {
@@ -37,7 +57,7 @@ export class Scanner {
 		this.options = options
 
 		this.detector = new MarkerDetector(experience)
-		this.camera = new VideoReader(options.video, options.canvas, {
+		this.camera = new VideoReader({
 			video: {facingMode: 'environment'},
 			audio: false
 		});
@@ -67,9 +87,12 @@ export class Scanner {
 				const actionTimeout = this.experience.settings?.actionTimout || 5000
 				const threshSize = this.experience.settings?.threshSize || 101
 				const threshConst = this.experience.settings?.threshConst || 1
+				const colour = parseColourToScalar(this.options.outlineColor)
 
 				const videoProps = await this.camera.start()
 				const dst = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC1)
+				this.options.canvas.width = videoProps.width!
+				this.options.canvas.height = videoProps.height!
 				let lastActionTime: number = 0
 				this.options.stateChanged?.(ScannerState.scanning)
 				this.options.markerChanged?.(null)
@@ -112,9 +135,9 @@ export class Scanner {
 						cv.findContours(dst, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
 						if (this.options.debugView) {
-							cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGB)
+							cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGBA)
 						} else {
-							cv.cvtColor(src, dst, cv.COLOR_RGBA2RGB)
+							src.copyTo(dst)
 						}
 
 						const marker = this.detector.findMarker(hierarchy)
@@ -124,14 +147,14 @@ export class Scanner {
 								this.options.markerChanged?.(marker)
 							}
 							lastActionTime = Date.now() + actionTimeout
-							cv.drawContours(dst, contours, marker.nodeIndex, this.color, 2, cv.LINE_8, hierarchy, 100)
+							cv.drawContours(dst, contours, marker.nodeIndex, colour, 2, cv.LINE_AA, hierarchy, 100)
 						} else if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
 							lastActionTime = 0
 							this.currentMarker = marker
 							this.options.markerChanged?.(null)
 						}
 
-						if (videoProps.shouldFlip) {
+						if (videoProps.facingMode == 'user') {
 							cv.flip(dst, dst, 1)
 						}
 						cv.imshow(this.options.canvas, dst)
