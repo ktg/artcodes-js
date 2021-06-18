@@ -1,5 +1,5 @@
 import type * as Mirada from "mirada";
-import type {Mat, VideoCapture} from "mirada";
+import type {Mat} from "mirada";
 
 declare var cv: Mirada.CV
 

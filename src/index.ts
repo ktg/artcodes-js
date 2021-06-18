@@ -9,15 +9,7 @@ export async function createScanner(experience: Experience, options: ScannerOpti
 	if (location.protocol != 'https:' && location.hostname != 'localhost') {
 		throw new Error("Artcodes requires https in order to access camera")
 	}
-	let opencvPath = '/opencv.js'
-	const scripts = document.querySelectorAll<HTMLScriptElement>('script');
-	scripts.forEach(el => {
-		const index = el.src.indexOf('/main.')
-		if (index > 0) {
-			opencvPath = el.src.slice(0, index) + '/opencv.js'
-		}
-	});
-
+	let opencvPath = 'opencv.js'
 	await loadOpencv({
 		opencvJsLocation: opencvPath
 	})
