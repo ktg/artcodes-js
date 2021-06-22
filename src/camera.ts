@@ -42,6 +42,8 @@ export class VideoReader {
 		this._constraints = constraints
 
 		this.video = document.createElement('video')
+		this.video.muted = true
+		this.video.playsInline = true
 		this.video.style.display = 'none'
 		this.canvas = document.createElement('canvas')
 		this.canvas.style.display = 'none'
