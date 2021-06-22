@@ -17,6 +17,7 @@ export interface ScannerOptions {
 	readonly debugView?: Boolean
 	readonly useUrlHash?: Boolean
 	readonly canvas: HTMLCanvasElement
+	readonly video?: HTMLVideoElement
 	readonly outlineColor?: string
 	readonly deviceSelect?: HTMLSelectElement
 	readonly markerChanged?: (marker: Marker | null) => void
@@ -60,7 +61,7 @@ export class Scanner {
 		this.camera = new VideoReader({
 			video: {facingMode: 'environment'},
 			audio: false
-		});
+		}, options.video);
 		options.stateChanged?.(ScannerState.loading)
 	}
 

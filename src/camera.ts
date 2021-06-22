@@ -38,13 +38,17 @@ export class VideoReader {
 	protected stream: MediaStream | undefined
 	private settings: MediaTrackSettings | null = null
 
-	constructor(constraints: MediaStreamConstraints) {
+	constructor(constraints: MediaStreamConstraints, video?: HTMLVideoElement) {
 		this._constraints = constraints
 
-		this.video = document.createElement('video')
-		this.video.muted = true
-		this.video.playsInline = true
-		this.video.style.display = 'none'
+		if(video) {
+			this.video = video
+		} else {
+			this.video = document.createElement('video')
+			this.video.muted = true
+			this.video.playsInline = true
+			this.video.style.display = 'none'
+		}
 		this.canvas = document.createElement('canvas')
 		this.canvas.style.display = 'none'
 		document.body.append(this.video)
