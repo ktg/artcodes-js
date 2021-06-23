@@ -1,5 +1,5 @@
 import * as Mirada from "mirada";
-import {loadOpencv, Scalar} from "mirada";
+import {loadOpencv, Mat, Scalar} from "mirada";
 import {VideoReader} from "./camera"
 import type {Action, Experience, Settings} from "./experience";
 import type {Marker} from "./marker"
@@ -79,6 +79,8 @@ class ScannerImpl implements Scanner {
 	private _state: ScannerState = ScannerState.loading
 	private readonly camera: VideoReader
 	private readonly fps: number = 10
+	private readonly morphKernel: Mat
+
 	private currentMarker: Marker | null = null
 	private readonly detector
 
@@ -92,6 +94,7 @@ class ScannerImpl implements Scanner {
 			audio: false
 		}, options.video);
 		options.stateChanged?.(ScannerState.loading)
+		this.morphKernel = cv.Mat.ones(2, 2, cv.CV_8U)
 	}
 
 	private setState(newState: ScannerState) {
@@ -157,13 +160,13 @@ class ScannerImpl implements Scanner {
 						const begin = Date.now()
 						const src = this.camera.read()
 
+						// Too Slow
 						//cv.medianBlur(src, src, 3)
 
 						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
 						cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, threshSize, threshConst)
 
-						let M = cv.Mat.ones(2, 2, cv.CV_8U);
-						cv.morphologyEx(dst, dst, cv.MORPH_OPEN, M)
+						cv.morphologyEx(dst, dst, cv.MORPH_OPEN, this.morphKernel)
 
 						const contours = new cv.MatVector()
 						const hierarchy = new cv.Mat()
