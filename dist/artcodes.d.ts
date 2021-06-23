@@ -7,6 +7,7 @@ interface Settings {
     readonly threshSize?: number;
     readonly threshConst?: number;
     readonly actionTimout?: number;
+    readonly embeddedChecksum?: boolean;
 }
 interface Experience {
     readonly name?: string;
@@ -14,6 +15,7 @@ interface Experience {
     readonly actions: Array<Action>;
     readonly settings?: Settings;
 }
+
 declare class Marker {
     nodeIndex: number;
     regions: number[];
@@ -21,6 +23,7 @@ declare class Marker {
     constructor(nodeIndex: number, regions: number[], action: Action);
     equals(marker: Marker | null): boolean;
 }
+
 declare enum ScannerState {
     loading = 0,
     idle = 1,
@@ -36,20 +39,11 @@ interface ScannerOptions {
     readonly markerChanged?: (marker: Marker | null) => void;
     readonly stateChanged?: (state: ScannerState) => void;
 }
-declare class Scanner {
-    private readonly experience;
-    private readonly options;
-    private _state;
-    private readonly camera;
-    private readonly fps;
-    private currentMarker;
-    private readonly detector;
-    constructor(experience: Experience, options: ScannerOptions);
-    private setState;
-    private selectListener;
+interface Scanner {
     get state(): ScannerState;
     start(): Promise<void>;
     stop(): void;
 }
 declare function createScanner(experience: Experience, options: ScannerOptions): Promise<Scanner>;
-export { Experience, Action, Scanner, ScannerOptions, ScannerState, Settings, Marker, createScanner };
+
+export { Action, Experience, Marker, Scanner, ScannerOptions, ScannerState, Settings, createScanner };

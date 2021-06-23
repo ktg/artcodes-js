@@ -1,9 +1,11 @@
 import * as Mirada from "mirada";
-import {Scalar} from "mirada";
+import {loadOpencv, Scalar} from "mirada";
 import {VideoReader} from "./camera"
-import type {Experience} from "./experience";
+import type {Action, Experience, Settings} from "./experience";
 import type {Marker} from "./marker"
 import {MarkerDetector} from './markerDetector'
+
+export type {Experience, Action, Settings, Marker}
 
 declare var cv: Mirada.CV
 
@@ -44,7 +46,34 @@ function parseColourToScalar(input: string | undefined): Scalar {
 	return new cv.Scalar(array[0], array[1], array[2], 255)
 }
 
-export class Scanner {
+export interface Scanner {
+	get state(): ScannerState
+
+	start(): Promise<void>
+
+	stop(): void
+}
+
+export async function createScanner(experience: Experience, options: ScannerOptions): Promise<Scanner> {
+	if (location.protocol != 'https:' && location.hostname != 'localhost') {
+		throw new Error("Artcodes requires https in order to access camera")
+	}
+	let opencvPath = 'opencv.js'
+	await loadOpencv({
+		opencvJsLocation: opencvPath
+	})
+
+	const scanner = new ScannerImpl(experience, options)
+
+	if (location.hash == '#play') {
+		await scanner.start()
+	} else {
+		scanner.stop()
+	}
+	return scanner
+}
+
+class ScannerImpl implements Scanner {
 	private readonly experience: Experience
 	private readonly options: ScannerOptions
 	private _state: ScannerState = ScannerState.loading
@@ -128,8 +157,13 @@ export class Scanner {
 						const begin = Date.now()
 						const src = this.camera.read()
 
+						//cv.medianBlur(src, src, 3)
+
 						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
 						cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, threshSize, threshConst)
+
+						let M = cv.Mat.ones(2, 2, cv.CV_8U);
+						cv.morphologyEx(dst, dst, cv.MORPH_OPEN, M)
 
 						const contours = new cv.MatVector()
 						const hierarchy = new cv.Mat()

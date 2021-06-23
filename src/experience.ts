@@ -10,6 +10,7 @@ export interface Settings {
 	readonly threshSize?: number
 	readonly threshConst?: number
 	readonly actionTimout?: number
+	readonly embeddedChecksum?: boolean
 }
 
 export interface Experience {

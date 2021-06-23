@@ -22,6 +22,7 @@ export class MarkerDetector {
 	private readonly minRegions: number
 	private readonly maxValue: number
 	private readonly minValue: number
+	private readonly embeddedChecksum: boolean
 
 	private readonly experience: Experience
 	private readonly codes: Array<MarkerCode>
@@ -33,6 +34,7 @@ export class MarkerDetector {
 		let maxValue = 1
 		let maxRegions = 20
 		let minRegions = 1
+		this.embeddedChecksum = experience.settings && experience.settings.embeddedChecksum || false
 		experience.actions.forEach(action => {
 			action.codes.forEach(code => {
 				const markerCode = new MarkerCode(code.split(':').map((value) => {
@@ -75,16 +77,22 @@ export class MarkerDetector {
 
 	private createMarkerForNode(nodeIndex: number, hierarchy: Mat) {
 		let regions: number[] = []
+		let checksum: number | null = null
 
 		let currentNodeIndex = MarkerDetector.getFirstChild(hierarchy, nodeIndex)
 		while (currentNodeIndex >= 0) {
-			let leafs = this.countLeafs(currentNodeIndex, hierarchy)
+			let leafs = MarkerDetector.countLeafs(currentNodeIndex, hierarchy, this.minValue, this.maxValue)
 			if (leafs != null) {
 				if (regions.length >= this.maxRegions) {
 					return null
 				}
 
 				regions.push(leafs)
+			} else if (this.embeddedChecksum && checksum == null) {
+				checksum = MarkerDetector.countChecksum(currentNodeIndex, hierarchy)
+				if (checksum == null) {
+					return null
+				}
 			} else {
 				return null
 			}
@@ -96,6 +104,16 @@ export class MarkerDetector {
 		}
 
 		regions.sort()
+
+		if (this.embeddedChecksum) {
+			if (checksum == null) {
+				return null
+			}
+			if (!MarkerDetector.isChecksumValid(regions, checksum)) {
+				return null
+			}
+		}
+
 		for (let code of this.codes) {
 			let is_same = (code.code.length == regions.length) && code.code.every((element, index) => element === regions[index]);
 			if (is_same) {
@@ -105,7 +123,53 @@ export class MarkerDetector {
 		return null;
 	}
 
-	private countLeafs(nodeIndex: number, hierarchy: Mat): number | null {
+	private static isChecksumValid(regions: number[], checksum: number) {
+		// Find weighted sum of code, e.g. 1:1:2:4:4 -> 1*1 + 1*2 + 2*3 + 4*4 + 4*5 = 45
+		// Although do not use weights/values divisible by 7
+		// e.g. transform values 1,2,3,4,5,6,7,8, 9,10,11,12,13,14,15... to
+		//                       1,2,3,4,5,6,8,9,10,11,12,13,15,16,17
+		const embeddedChecksumModValue = 7
+		let weightedSum = 0
+		let weight = 1
+		regions.forEach((value) => {
+			if (weight % embeddedChecksumModValue == 0) {
+				weight++
+			}
+			weightedSum += value * weight
+			weight++
+		})
+
+		return checksum == (weightedSum - 1) % 7 + 1
+	}
+
+	private static countChecksum(regionIndex: number, hierarchy: Mat): number | null {
+		let currentNodeIndex = MarkerDetector.getFirstChild(hierarchy, regionIndex)
+		if (currentNodeIndex < 0) {
+			return null
+		}
+
+		let dotCount = 0
+		while (currentNodeIndex >= 0) {
+			if (MarkerDetector.isValidHollowDot(currentNodeIndex, hierarchy)) {
+				dotCount++;
+			} else //if (!(this.relaxedEmbeddedChecksumIgnoreNonHollowDots && this.isValidDot(currentDotIndex, hierarchy)))
+			{
+				return null
+			}
+
+			currentNodeIndex = MarkerDetector.getNextNode(hierarchy, currentNodeIndex)
+		}
+
+		return dotCount
+	}
+
+	private static isValidHollowDot(nodeIndex: number, hierarchy: Mat): boolean {
+		let firstChild = MarkerDetector.getFirstChild(hierarchy, nodeIndex)
+		return firstChild >= 0
+			&& MarkerDetector.getNextNode(hierarchy, firstChild) < 0
+	}
+
+	private static countLeafs(nodeIndex: number, hierarchy: Mat, minLeaves: number, maxLeaves: number): number | null {
 		let leafCount = 0;
 		let currentNodeIndex = MarkerDetector.getFirstChild(hierarchy, nodeIndex)
 		while (currentNodeIndex >= 0) {
@@ -113,13 +177,14 @@ export class MarkerDetector {
 				return null;
 			}
 			leafCount++
-			if (leafCount > this.maxValue) {
+			if (leafCount > maxLeaves) {
+				console.log("Leaf count too high:" + leafCount)
 				return null;
 			}
 			currentNodeIndex = MarkerDetector.getNextNode(hierarchy, currentNodeIndex);
 		}
 
-		if (leafCount < this.minValue) {
+		if (leafCount < minLeaves) {
 			return null;
 		}
 
