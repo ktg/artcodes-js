@@ -41,7 +41,7 @@ export class VideoReader {
 	constructor(constraints: MediaStreamConstraints, video?: HTMLVideoElement) {
 		this._constraints = constraints
 
-		if(video) {
+		if (video) {
 			this.video = video
 		} else {
 			this.video = document.createElement('video')
@@ -73,6 +73,7 @@ export class VideoReader {
 	async start(): Promise<MediaTrackSettings> {
 		this.stream = this.video.srcObject = await navigator.mediaDevices.getUserMedia(this._constraints)
 		const settings = this.settings = this.stream.getVideoTracks()[0].getSettings()
+		console.log(settings)
 		this._deviceId = settings.deviceId
 		const width = settings.width!!
 		const height = settings.height!!

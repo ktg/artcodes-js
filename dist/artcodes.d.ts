@@ -1,6 +1,6 @@
 interface Action {
-    readonly name: string;
-    readonly url: string;
+    readonly name?: string;
+    readonly url?: string;
     readonly codes: Array<string>;
 }
 interface Settings {
@@ -8,6 +8,7 @@ interface Settings {
     readonly threshConst?: number;
     readonly actionTimout?: number;
     readonly embeddedChecksum?: boolean;
+    readonly tile?: boolean;
 }
 interface Experience {
     readonly name?: string;

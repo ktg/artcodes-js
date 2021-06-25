@@ -63,6 +63,7 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 				},
 				markerChanged: (marker) => {
 					if (marker != null) {
+						buttonAction.style.display = 'block'
 						buttonAction.innerText = marker.action.name
 						buttonAction.classList.remove('mdc-fab--exited')
 						buttonAction.addEventListener('click', () => {
@@ -98,9 +99,10 @@ window.addEventListener('load', () => {
 		name: "Wetlands Test",
 		image: "https://carolanguitar.files.wordpress.com/2014/10/bottom-to-top.jpg",
 		settings: {
-			threshSize: 1201,
-			threshConst: -1,
-			embeddedChecksum: true
+			threshSize: 401,
+			threshConst: 0,
+			embeddedChecksum: true,
+			tile: true
 		},
 		actions: [{
 			name: "Test 1",

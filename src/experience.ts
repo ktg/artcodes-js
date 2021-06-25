@@ -1,6 +1,6 @@
 export interface Action {
-	readonly name: string
-	readonly url: string
+	readonly name?: string
+	readonly url?: string
 	readonly codes: Array<string>
 	//readonly match: string
 	//readonly showDetails: boolean
@@ -11,6 +11,7 @@ export interface Settings {
 	readonly threshConst?: number
 	readonly actionTimout?: number
 	readonly embeddedChecksum?: boolean
+	readonly tile?: boolean
 }
 
 export interface Experience {

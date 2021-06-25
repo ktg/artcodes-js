@@ -80,6 +80,8 @@ class ScannerImpl implements Scanner {
 	private readonly camera: VideoReader
 	private readonly fps: number = 10
 	private readonly morphKernel: Mat
+	private tiles = 1
+	private detected = false
 
 	private currentMarker: Marker | null = null
 	private readonly detector
@@ -90,7 +92,11 @@ class ScannerImpl implements Scanner {
 
 		this.detector = new MarkerDetector(experience)
 		this.camera = new VideoReader({
-			video: {facingMode: 'environment'},
+			video: {
+				width: {min: 600, ideal: 1920},
+				height: {min: 400, ideal: 1080},
+				facingMode: 'environment'
+			},
 			audio: false
 		}, options.video);
 		options.stateChanged?.(ScannerState.loading)
@@ -105,7 +111,11 @@ class ScannerImpl implements Scanner {
 	private selectListener = () => {
 		this.camera.stop()
 		this.camera.constraints = {
-			video: {deviceId: this.options.deviceSelect?.value}
+			video: {
+				width: {min: 600, ideal: 800,},
+				height: {min: 400, ideal: 600},
+				deviceId: this.options.deviceSelect?.value
+			}
 		}
 		this.start()
 	}
@@ -117,8 +127,8 @@ class ScannerImpl implements Scanner {
 	async start(): Promise<void> {
 		if (this._state != ScannerState.scanning) {
 			try {
-				const actionTimeout = this.experience.settings?.actionTimout || 5000
-				const threshSize = this.experience.settings?.threshSize || 101
+				const actionTimeout = this.experience.settings?.actionTimout || 10000
+				const threshSize = this.experience.settings?.threshSize || 201
 				const threshConst = this.experience.settings?.threshConst || 1
 				const colour = parseColourToScalar(this.options.outlineColor)
 
@@ -160,13 +170,39 @@ class ScannerImpl implements Scanner {
 						const begin = Date.now()
 						const src = this.camera.read()
 
-						// Too Slow
-						//cv.medianBlur(src, src, 3)
-
 						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
-						cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, threshSize, threshConst)
 
-						cv.morphologyEx(dst, dst, cv.MORPH_OPEN, this.morphKernel)
+						if (this.experience.settings && this.experience.settings.tile === false) {
+							//cv.equalizeHist(dst, dst)
+							cv.blur(dst, dst, new cv.Size(5, 5))
+							//cv.threshold(dst, dst, 0, 255, cv.THRESH_OTSU);
+							cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, threshSize, threshConst)
+						} else {
+							if (!this.detected) {
+								this.tiles = (this.tiles % 9) + 1;
+							}
+							//cv.equalizeHist(dst, dst)
+							cv.blur(dst, dst, new cv.Size(3, 3))
+
+							const width = videoProps.width!
+							const height = videoProps.height!
+							const tileWidth = Math.round(width / this.tiles)
+							const tileHeight = Math.round(height / this.tiles)
+
+							for (let colIndex = 0; colIndex < this.tiles; colIndex++) {
+								const startCol = colIndex * tileWidth
+								const colWidth = colIndex === this.tiles - 1 ? width - startCol : tileWidth
+								for (let rowIndex = 0; rowIndex < this.tiles; rowIndex++) {
+									const startRow = rowIndex * tileHeight
+									const rowHeight = rowIndex === this.tiles - 1 ? height - startRow : tileHeight
+
+									const tileMat = dst.roi(new cv.Rect(startCol, startRow, colWidth, rowHeight))
+									cv.threshold(tileMat, tileMat, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+								}
+							}
+						}
+
+						//cv.morphologyEx(dst, dst, cv.MORPH_ERODE, this.morphKernel)
 
 						const contours = new cv.MatVector()
 						const hierarchy = new cv.Mat()
@@ -180,16 +216,20 @@ class ScannerImpl implements Scanner {
 
 						const marker = this.detector.findMarker(hierarchy)
 						if (marker != null) {
+							this.detected = true
 							if (!marker.equals(this.currentMarker)) {
 								this.currentMarker = marker
 								this.options.markerChanged?.(marker)
 							}
 							lastActionTime = Date.now() + actionTimeout
 							cv.drawContours(dst, contours, marker.nodeIndex, colour, 2, cv.LINE_AA, hierarchy, 100)
-						} else if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
-							lastActionTime = 0
-							this.currentMarker = marker
-							this.options.markerChanged?.(null)
+						} else {
+							this.detected = false
+							if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
+								lastActionTime = 0
+								this.currentMarker = marker
+								this.options.markerChanged?.(null)
+							}
 						}
 
 						if (videoProps.facingMode == 'user') {

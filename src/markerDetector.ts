@@ -23,6 +23,7 @@ export class MarkerDetector {
 	private readonly maxValue: number
 	private readonly minValue: number
 	private readonly embeddedChecksum: boolean
+	private readonly ignoreEmpty: boolean
 
 	private readonly experience: Experience
 	private readonly codes: Array<MarkerCode>
@@ -49,6 +50,7 @@ export class MarkerDetector {
 				})
 			})
 		})
+		this.ignoreEmpty = true
 		this.codes = codes
 		this.maxRegions = maxRegions
 		this.minRegions = minRegions
@@ -83,11 +85,14 @@ export class MarkerDetector {
 		while (currentNodeIndex >= 0) {
 			let leafs = MarkerDetector.countLeafs(currentNodeIndex, hierarchy, this.minValue, this.maxValue)
 			if (leafs != null) {
-				if (regions.length >= this.maxRegions) {
-					return null
-				}
+				if (leafs === 0 && this.ignoreEmpty) {
+				} else {
+					if (regions.length >= this.maxRegions) {
+						return null
+					}
 
-				regions.push(leafs)
+					regions.push(leafs)
+				}
 			} else if (this.embeddedChecksum && checksum == null) {
 				checksum = MarkerDetector.countChecksum(currentNodeIndex, hierarchy)
 				if (checksum == null) {
@@ -174,20 +179,22 @@ export class MarkerDetector {
 		let currentNodeIndex = MarkerDetector.getFirstChild(hierarchy, nodeIndex)
 		while (currentNodeIndex >= 0) {
 			if (MarkerDetector.getFirstChild(hierarchy, currentNodeIndex) >= 0) {
-				return null;
+				return null
 			}
 			leafCount++
 			if (leafCount > maxLeaves) {
-				console.log("Leaf count too high:" + leafCount)
-				return null;
+				return null
 			}
 			currentNodeIndex = MarkerDetector.getNextNode(hierarchy, currentNodeIndex);
 		}
 
 		if (leafCount < minLeaves) {
-			return null;
+			if (leafCount == 0) {
+				return 0
+			}
+			return null
 		}
 
-		return leafCount;
+		return leafCount
 	}
 }
