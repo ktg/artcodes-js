@@ -24,6 +24,7 @@ export class MarkerDetector {
 	private readonly minValue: number
 	private readonly embeddedChecksum: boolean
 	private readonly ignoreEmpty: boolean
+	private readonly maxEmpty: number = 3
 
 	private readonly experience: Experience
 	private readonly codes: Array<MarkerCode>
@@ -80,12 +81,17 @@ export class MarkerDetector {
 	private createMarkerForNode(nodeIndex: number, hierarchy: Mat) {
 		let regions: number[] = []
 		let checksum: number | null = null
+		let empties = 0
 
 		let currentNodeIndex = MarkerDetector.getFirstChild(hierarchy, nodeIndex)
 		while (currentNodeIndex >= 0) {
 			let leafs = MarkerDetector.countLeafs(currentNodeIndex, hierarchy, this.minValue, this.maxValue)
 			if (leafs != null) {
 				if (leafs === 0 && this.ignoreEmpty) {
+					empties++
+					if(empties > this.maxEmpty) {
+						//return null
+					}
 				} else {
 					if (regions.length >= this.maxRegions) {
 						return null
@@ -119,6 +125,7 @@ export class MarkerDetector {
 			}
 		}
 
+		console.log("Empties",empties)
 		for (let code of this.codes) {
 			let is_same = (code.code.length == regions.length) && code.code.every((element, index) => element === regions[index]);
 			if (is_same) {

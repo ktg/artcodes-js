@@ -4,6 +4,7 @@ import {VideoReader} from "./camera"
 import type {Action, Experience, Settings} from "./experience";
 import type {Marker} from "./marker"
 import {MarkerDetector} from './markerDetector'
+import {MovingThresholder, Thresholder, TileTresholder} from "./thresh";
 
 export type {Experience, Action, Settings, Marker}
 
@@ -80,7 +81,7 @@ class ScannerImpl implements Scanner {
 	private readonly camera: VideoReader
 	private readonly fps: number = 10
 	private readonly morphKernel: Mat
-	private tiles = 1
+	private readonly thresholder: Thresholder
 	private detected = false
 
 	private currentMarker: Marker | null = null
@@ -100,6 +101,11 @@ class ScannerImpl implements Scanner {
 			audio: false
 		}, options.video);
 		options.stateChanged?.(ScannerState.loading)
+		if(this.experience.settings?.tile) {
+			this.thresholder = new TileTresholder()
+		} else {
+			this.thresholder = new MovingThresholder()
+		}
 		this.morphKernel = cv.Mat.ones(2, 2, cv.CV_8U)
 	}
 
@@ -128,14 +134,15 @@ class ScannerImpl implements Scanner {
 		if (this._state != ScannerState.scanning) {
 			try {
 				const actionTimeout = this.experience.settings?.actionTimout || 10000
-				const threshSize = this.experience.settings?.threshSize || 201
-				const threshConst = this.experience.settings?.threshConst || 1
+				//const threshSize = this.experience.settings?.threshSize || 201
+				let threshConst = this.experience.settings?.threshConst || 128
 				const colour = parseColourToScalar(this.options.outlineColor)
 
 				const videoProps = await this.camera.start()
 				const dst = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC1)
 				this.options.canvas.width = videoProps.width!
 				this.options.canvas.height = videoProps.height!
+				this.options.canvas.style.aspectRatio = videoProps.width! + ' / ' + videoProps.height!
 				let lastActionTime: number = 0
 				this.options.stateChanged?.(ScannerState.scanning)
 				this.options.markerChanged?.(null)
@@ -172,35 +179,11 @@ class ScannerImpl implements Scanner {
 
 						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
 
-						if (this.experience.settings && this.experience.settings.tile === false) {
-							//cv.equalizeHist(dst, dst)
-							cv.blur(dst, dst, new cv.Size(5, 5))
-							//cv.threshold(dst, dst, 0, 255, cv.THRESH_OTSU);
-							cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, threshSize, threshConst)
-						} else {
-							if (!this.detected) {
-								this.tiles = (this.tiles % 9) + 1;
-							}
-							//cv.equalizeHist(dst, dst)
-							cv.blur(dst, dst, new cv.Size(3, 3))
+						//const i = videoProps.width! / 2;
+						//const j = videoProps.height! / 2;
+						//console.log(dst.ucharPtr(i, j)[0])
 
-							const width = videoProps.width!
-							const height = videoProps.height!
-							const tileWidth = Math.round(width / this.tiles)
-							const tileHeight = Math.round(height / this.tiles)
-
-							for (let colIndex = 0; colIndex < this.tiles; colIndex++) {
-								const startCol = colIndex * tileWidth
-								const colWidth = colIndex === this.tiles - 1 ? width - startCol : tileWidth
-								for (let rowIndex = 0; rowIndex < this.tiles; rowIndex++) {
-									const startRow = rowIndex * tileHeight
-									const rowHeight = rowIndex === this.tiles - 1 ? height - startRow : tileHeight
-
-									const tileMat = dst.roi(new cv.Rect(startCol, startRow, colWidth, rowHeight))
-									cv.threshold(tileMat, tileMat, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-								}
-							}
-						}
+						this.thresholder.threshold(dst, this.detected)
 
 						//cv.morphologyEx(dst, dst, cv.MORPH_ERODE, this.morphKernel)
 
@@ -218,6 +201,8 @@ class ScannerImpl implements Scanner {
 						if (marker != null) {
 							this.detected = true
 							if (!marker.equals(this.currentMarker)) {
+								console.log(marker.regions)
+								console.log(threshConst)
 								this.currentMarker = marker
 								this.options.markerChanged?.(marker)
 							}
