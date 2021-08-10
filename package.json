@@ -37,14 +37,14 @@
 		"directory": "types/express"
 	},
 	"devDependencies": {
-		"@material/button": "^11.0.0",
-		"@material/circular-progress": "^11.0.0",
-		"@material/fab": "^11.0.0",
-		"@material/select": "^11.0.0",
+		"@material/button": "^12.0.0",
+		"@material/circular-progress": "^12.0.0",
+		"@material/fab": "^12.0.0",
+		"@material/select": "^12.0.0",
 		"mirada": "^0.0.15",
-		"tsup": "^4.12.0",
+		"tsup": "^4.13.1",
 		"typescript": "^4.3.5",
-		"vite": "^2.3.8",
-		"vite-plugin-dts": "^0.5.2"
+		"vite": "^2.4.4",
+		"vite-plugin-dts": "^0.5.3"
 	}
 }

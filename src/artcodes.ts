@@ -142,6 +142,7 @@ class ScannerImpl implements Scanner {
 				const dst = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC1)
 				this.options.canvas.width = videoProps.width!
 				this.options.canvas.height = videoProps.height!
+				// @ts-ignore
 				this.options.canvas.style.aspectRatio = videoProps.width! + ' / ' + videoProps.height!
 				let lastActionTime: number = 0
 				this.options.stateChanged?.(ScannerState.scanning)

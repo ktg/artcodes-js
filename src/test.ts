@@ -105,7 +105,7 @@ window.addEventListener('load', () => {
 			threshSize: 801,
 			threshConst: 0,
 			embeddedChecksum: true,
-			tile: false
+			tile: true
 		},
 		actions: [{
 			name: "Test 1",
