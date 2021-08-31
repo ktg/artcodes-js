@@ -24,7 +24,7 @@ export class MarkerDetector {
 	private readonly minValue: number
 	private readonly embeddedChecksum: boolean
 	private readonly ignoreEmpty: boolean
-	private readonly maxEmpty: number = 3
+	private readonly maxEmpty: number = 10
 
 	private readonly experience: Experience
 	private readonly codes: Array<MarkerCode>
@@ -89,11 +89,12 @@ export class MarkerDetector {
 			if (leafs != null) {
 				if (leafs === 0 && this.ignoreEmpty) {
 					empties++
-					if(empties > this.maxEmpty) {
-						//return null
+					if (empties > this.maxEmpty) {
+						return null
 					}
 				} else {
 					if (regions.length >= this.maxRegions) {
+						console.log("Too many regions " + regions)
 						return null
 					}
 
@@ -111,6 +112,9 @@ export class MarkerDetector {
 		}
 
 		if (regions.length < this.minRegions) {
+			if (regions.length > 1) {
+				console.log(regions)
+			}
 			return null
 		}
 
@@ -125,14 +129,14 @@ export class MarkerDetector {
 			}
 		}
 
-		console.log("Empties",empties)
+		//console.log("Empties",empties)
 		for (let code of this.codes) {
 			let is_same = (code.code.length == regions.length) && code.code.every((element, index) => element === regions[index]);
 			if (is_same) {
 				return new Marker(nodeIndex, regions, code.action);
 			}
 		}
-		return null;
+		return null
 	}
 
 	private static isChecksumValid(regions: number[], checksum: number) {
@@ -151,7 +155,8 @@ export class MarkerDetector {
 			weight++
 		})
 
-		return checksum == (weightedSum - 1) % 7 + 1
+		const validChecksum = (weightedSum - 1) % 7 + 1
+		return checksum == validChecksum
 	}
 
 	private static countChecksum(regionIndex: number, hierarchy: Mat): number | null {
@@ -164,9 +169,11 @@ export class MarkerDetector {
 		while (currentNodeIndex >= 0) {
 			if (MarkerDetector.isValidHollowDot(currentNodeIndex, hierarchy)) {
 				dotCount++;
-			} else //if (!(this.relaxedEmbeddedChecksumIgnoreNonHollowDots && this.isValidDot(currentDotIndex, hierarchy)))
-			{
-				return null
+			} else {
+				let leafs = MarkerDetector.countLeafs(currentNodeIndex, hierarchy, 0, 5)
+				if (leafs == null) {
+					return null
+				}
 			}
 
 			currentNodeIndex = MarkerDetector.getNextNode(hierarchy, currentNodeIndex)

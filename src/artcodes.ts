@@ -101,7 +101,7 @@ class ScannerImpl implements Scanner {
 			audio: false
 		}, options.video);
 		options.stateChanged?.(ScannerState.loading)
-		if(this.experience.settings?.tile) {
+		if (this.experience.settings?.tile) {
 			this.thresholder = new TileTresholder()
 		} else {
 			this.thresholder = new MovingThresholder()
@@ -134,8 +134,6 @@ class ScannerImpl implements Scanner {
 		if (this._state != ScannerState.scanning) {
 			try {
 				const actionTimeout = this.experience.settings?.actionTimout || 10000
-				//const threshSize = this.experience.settings?.threshSize || 201
-				let threshConst = this.experience.settings?.threshConst || 128
 				const colour = parseColourToScalar(this.options.outlineColor)
 
 				const videoProps = await this.camera.start()
@@ -180,13 +178,7 @@ class ScannerImpl implements Scanner {
 
 						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
 
-						//const i = videoProps.width! / 2;
-						//const j = videoProps.height! / 2;
-						//console.log(dst.ucharPtr(i, j)[0])
-
 						this.thresholder.threshold(dst, this.detected)
-
-						//cv.morphologyEx(dst, dst, cv.MORPH_ERODE, this.morphKernel)
 
 						const contours = new cv.MatVector()
 						const hierarchy = new cv.Mat()
@@ -203,7 +195,6 @@ class ScannerImpl implements Scanner {
 							this.detected = true
 							if (!marker.equals(this.currentMarker)) {
 								console.log(marker.regions)
-								console.log(threshConst)
 								this.currentMarker = marker
 								this.options.markerChanged?.(marker)
 							}
@@ -232,7 +223,6 @@ class ScannerImpl implements Scanner {
 
 				processVideo()
 			} catch (error) {
-				console.log('error: ', error.message, error.name);
 				console.trace(error)
 				this.stop()
 			}

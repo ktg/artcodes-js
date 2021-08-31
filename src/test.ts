@@ -108,23 +108,23 @@ window.addEventListener('load', () => {
 			tile: true
 		},
 		actions: [{
-			name: "Test 1",
+			name: "1111",
 			url: "https://carolanguitar.com",
 			codes: ["1:1:1:1"]
 		}, {
-			name: "Test 2",
+			name: "1122",
 			url: "https://carolanguitar.com/tech-spec/",
 			codes: ["1:1:2:2"]
 		}, {
-			name: "Test 3",
+			name: "1223",
 			url: "https://carolanguitar.com/user-guide/",
 			codes: ["1:2:2:3"]
 		}, {
-			name: "Test 4",
+			name: "2223",
 			url: "https://wp.me/P4QC5t-3T",
 			codes: ["2:2:2:3"]
 		}, {
-			name: "Test 5",
+			name: "1114",
 			url: "https://www.artcodes.co.uk",
 			codes: ["1:1:1:4"]
 		}],

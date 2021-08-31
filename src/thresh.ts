@@ -18,7 +18,6 @@ export class MovingThresholder implements Thresholder {
 		} else {
 			this.lastMatch = this.threshConst
 			console.log("Thresh: " + this.threshConst)
-			this.threshConst = 0
 		}
 		//cv.equalizeHist(dst, dst)
 		cv.blur(img, img, new cv.Size(3, 3))
@@ -29,13 +28,22 @@ export class MovingThresholder implements Thresholder {
 }
 
 export class TileTresholder implements Thresholder {
-	private tileCount: number = 0
+	private readonly threshValue: number = 128
+	private readonly minTiles = 4
+	private readonly maxTiles = 8
+	private tileCount: number = this.minTiles
 
 	threshold(img: Mat, detected: boolean) {
 		if (!detected) {
-			this.tileCount = (this.tileCount % 9) + 1;
+			if (this.tileCount == this.maxTiles) {
+				this.tileCount = this.minTiles
+			} else {
+				this.tileCount++
+			}
+		} else {
+			console.log("Tiles: " + this.tileCount)
 		}
-		//cv.equalizeHist(dst, dst)
+		//cv.equalizeHist(img, img)
 		cv.blur(img, img, new cv.Size(3, 3))
 
 		const width = img.cols
@@ -51,7 +59,7 @@ export class TileTresholder implements Thresholder {
 				const rowHeight = rowIndex === this.tileCount - 1 ? height - startRow : tileHeight
 
 				const tileMat = img.roi(new cv.Rect(startCol, startRow, colWidth, rowHeight))
-				cv.threshold(tileMat, tileMat, 128, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+				cv.threshold(tileMat, tileMat, this.threshValue, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
 			}
 		}
 	}
