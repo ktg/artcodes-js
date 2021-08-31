@@ -17,7 +17,6 @@ export class MovingThresholder implements Thresholder {
 			this.threshConst = ((this.threshConst + this.step - min) % this.range) + min
 		} else {
 			this.lastMatch = this.threshConst
-			console.log("Thresh: " + this.threshConst)
 		}
 		//cv.equalizeHist(dst, dst)
 		cv.blur(img, img, new cv.Size(3, 3))
@@ -40,8 +39,6 @@ export class TileTresholder implements Thresholder {
 			} else {
 				this.tileCount++
 			}
-		} else {
-			console.log("Tiles: " + this.tileCount)
 		}
 		//cv.equalizeHist(img, img)
 		cv.blur(img, img, new cv.Size(3, 3))

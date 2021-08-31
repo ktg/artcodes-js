@@ -82,9 +82,11 @@ class ScannerImpl implements Scanner {
 	private readonly fps: number = 10
 	private readonly morphKernel: Mat
 	private readonly thresholder: Thresholder
-	private detected = false
+	private detected: Marker | null = null
+	private markerCount: number = 0
 
 	private currentMarker: Marker | null = null
+
 	private readonly detector
 
 	constructor(experience: Experience, options: ScannerOptions) {
@@ -134,6 +136,7 @@ class ScannerImpl implements Scanner {
 		if (this._state != ScannerState.scanning) {
 			try {
 				const actionTimeout = this.experience.settings?.actionTimout || 10000
+				const actionDelay = this.experience.settings?.actionDelay || 0
 				const colour = parseColourToScalar(this.options.outlineColor)
 
 				const videoProps = await this.camera.start()
@@ -178,7 +181,7 @@ class ScannerImpl implements Scanner {
 
 						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
 
-						this.thresholder.threshold(dst, this.detected)
+						this.thresholder.threshold(dst, this.detected != null)
 
 						const contours = new cv.MatVector()
 						const hierarchy = new cv.Mat()
@@ -192,16 +195,23 @@ class ScannerImpl implements Scanner {
 
 						const marker = this.detector.findMarker(hierarchy)
 						if (marker != null) {
-							this.detected = true
-							if (!marker.equals(this.currentMarker)) {
-								console.log(marker.regions)
-								this.currentMarker = marker
-								this.options.markerChanged?.(marker)
+							if (!marker.equals(this.detected)) {
+								this.markerCount = 0
+								this.detected = marker
 							}
-							lastActionTime = Date.now() + actionTimeout
+							this.markerCount = Math.min(actionDelay, this.markerCount + 2)
+							if(this.markerCount >= actionDelay) {
+								if (!this.currentMarker?.equals(marker)) {
+									console.log(marker.regions)
+									this.currentMarker = marker
+									this.options.markerChanged?.(marker)
+								}
+								lastActionTime = Date.now() + actionTimeout
+							}
 							cv.drawContours(dst, contours, marker.nodeIndex, colour, 2, cv.LINE_AA, hierarchy, 100)
 						} else {
-							this.detected = false
+							this.detected = null
+							this.markerCount = Math.max(0, this.markerCount - 1)
 							if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
 								lastActionTime = 0
 								this.currentMarker = marker

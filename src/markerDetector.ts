@@ -94,7 +94,6 @@ export class MarkerDetector {
 					}
 				} else {
 					if (regions.length >= this.maxRegions) {
-						console.log("Too many regions " + regions)
 						return null
 					}
 
@@ -112,9 +111,6 @@ export class MarkerDetector {
 		}
 
 		if (regions.length < this.minRegions) {
-			if (regions.length > 1) {
-				console.log(regions)
-			}
 			return null
 		}
 

@@ -104,6 +104,7 @@ window.addEventListener('load', () => {
 		settings: {
 			threshSize: 801,
 			threshConst: 0,
+			actionDelay: 5,
 			embeddedChecksum: true,
 			tile: true
 		},
