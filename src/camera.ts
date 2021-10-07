@@ -75,11 +75,21 @@ export class VideoReader {
 		const settings = this.settings = this.stream.getVideoTracks()[0].getSettings()
 		console.log(settings)
 		this._deviceId = settings.deviceId
-		const width = settings.width!!
-		const height = settings.height!!
+		let width = settings.width!!
+		let height = settings.height!!
 		this.video.width = width
 		this.video.height = height
 		await this.video.play()
+		// HACK For iOS Safari: media device setting reports reversed width/height in portrait
+		// So, grab the width/height from the video after it has started
+		if(this.video.videoHeight && this.video.videoHeight !== height) {
+			height = this.video.videoHeight
+			width = this.video.videoWidth
+			this.video.width = width
+			this.video.height = height
+			this.settings.height = height
+			this.settings.width = width
+		}
 		this.canvas.width = width
 		this.canvas.height = height
 		this.mat = cv.Mat.zeros(height, width, cv.CV_8UC4)

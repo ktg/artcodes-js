@@ -12,7 +12,6 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 	const buttonStop = document.getElementById('artc_buttonStop') as HTMLButtonElement
 
 	const image = document.getElementById('artc_image') as HTMLImageElement
-	const placeholder = document.getElementById('artc_placeholder')!!
 	if (experience.image != null && experience.image != '') {
 		image.src = experience.image
 		image.style.display = ''
@@ -21,7 +20,6 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 		image.height = 600
 		image.style.backgroundColor = '#000'
 	}
-	placeholder.style.display = ''
 
 	new MDCRipple(buttonAction)
 	new MDCRipple(buttonStart)
@@ -41,20 +39,20 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 				debugView: true,
 				stateChanged: (state) => {
 					if (state == ScannerState.idle) {
-						placeholder.style.display = ''
+						image.style.display = ''
 						canvas.style.display = 'none'
 						buttonStop.style.display = 'none'
 						buttonStart.style.display = ''
 						buttonStart.classList.remove('mdc-fab--exited')
 						loadingIndicator.classList.add('mdc-circular-progress--closed')
 					} else if (state == ScannerState.loading) {
-						placeholder.style.display = ''
+						image.style.display = ''
 						canvas.style.display = 'none'
 						buttonStop.style.display = 'none'
 						buttonStart.classList.add('mdc-fab--exited')
 						loadingIndicator.classList.remove('mdc-circular-progress--closed')
 					} else if (state == ScannerState.scanning) {
-						placeholder.style.display = 'none'
+						image.style.display = 'none'
 						canvas.style.display = ''
 						buttonStop.style.display = ''
 						buttonStart.classList.add('mdc-fab--exited')
@@ -87,7 +85,7 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 			scanner.stop()
 		})
 	} catch (e) {
-		placeholder.style.display = ''
+		image.style.display = ''
 		canvas.style.display = 'none'
 		buttonStop.style.display = 'none'
 		buttonStart.classList.add('mdc-fab--exited')

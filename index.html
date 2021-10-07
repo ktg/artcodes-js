@@ -2,21 +2,17 @@
 <html lang="en">
 <head>
 	<title>Artcodes</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=800, user-scalable=no">
+	<meta charset="utf-8">	<meta name="viewport" content="width=device-width, initial-scale=1"/>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
 	<script type="module" src="/src/test.ts" defer></script>
 </head>
 <body>
 <div id="content">
-	<div style="display: flex; flex-direction: column; align-items: center">
-		<div id="artc_placeholder"
-		     style="width: 800px; height: 600px; overflow: hidden; display: flex; align-items: center">
-			<img id="artc_image" width="800" style="display: none">
-		</div>
-		<canvas id="artc_canvasOutput" width="800" height="600" style="background-color: black; display: none"></canvas>
-		<div style="display: flex; width: 800px; padding: 10px">
+	<div style="display: flex; flex-direction: column; align-items: stretch">
+		<img id="artc_image" style="display: none">
+		<canvas id="artc_canvasOutput" style="background-color: black; display: none"></canvas>
+		<div style="display: flex; padding: 10px">
 			<button id="artc_buttonAction" class="mdc-fab mdc-fab--extended mdc-fab--exited" style="display:none;">
 				<div class="mdc-fab__ripple"></div>
 				<span class="mdc-fab__label"></span>

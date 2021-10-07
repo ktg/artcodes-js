@@ -120,7 +120,7 @@ class ScannerImpl implements Scanner {
 		this.camera.stop()
 		this.camera.constraints = {
 			video: {
-				width: {min: 600, ideal: 800,},
+				width: {min: 400, ideal: 800},
 				height: {min: 400, ideal: 600},
 				deviceId: this.options.deviceSelect?.value
 			}
@@ -141,10 +141,17 @@ class ScannerImpl implements Scanner {
 
 				const videoProps = await this.camera.start()
 				const dst = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC1)
-				this.options.canvas.width = videoProps.width!
-				this.options.canvas.height = videoProps.height!
-				// @ts-ignore
-				this.options.canvas.style.aspectRatio = videoProps.width! + ' / ' + videoProps.height!
+				if ('aspectRatio' in this.options.canvas.style) {
+					this.options.canvas.style.aspectRatio = videoProps.width! + ' / ' + videoProps.height!
+					this.options.canvas.width = videoProps.width!
+					this.options.canvas.height = videoProps.height!
+				} else {
+					const canvasWidth = this.options.canvas.parentElement!.clientWidth
+					this.options.canvas.style.width = canvasWidth + 'px'
+					this.options.canvas.style.height = Math.round(canvasWidth / videoProps.width! * videoProps.height!) + 'px'
+					this.options.canvas.width = videoProps.width!
+					this.options.canvas.height = videoProps.height!
+				}
 				let lastActionTime: number = 0
 				this.options.stateChanged?.(ScannerState.scanning)
 				this.options.markerChanged?.(null)
@@ -200,7 +207,7 @@ class ScannerImpl implements Scanner {
 								this.detected = marker
 							}
 							this.markerCount = Math.min(actionDelay, this.markerCount + 2)
-							if(this.markerCount >= actionDelay) {
+							if (this.markerCount >= actionDelay) {
 								if (!this.currentMarker?.equals(marker)) {
 									console.log(marker.regions)
 									this.currentMarker = marker
