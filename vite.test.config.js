@@ -1,8 +1,10 @@
 // vite.config.js
-const path = require('path')
-
 module.exports = {
 	build: {
-		outDir: "build"
-	}
+		outDir: "build",
+		sourcemap: true,
+	},
+
+	base: '/artcodes/',
+	sourcemap: true
 }

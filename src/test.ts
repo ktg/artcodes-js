@@ -36,7 +36,7 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 			{
 				canvas: canvas,
 				deviceSelect: deviceSelect,
-				debugView: true,
+				//debugView: true,
 				stateChanged: (state) => {
 					if (state == ScannerState.idle) {
 						image.style.display = ''

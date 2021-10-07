@@ -125,7 +125,7 @@ class ScannerImpl implements Scanner {
 				deviceId: this.options.deviceSelect?.value
 			}
 		}
-		this.start()
+		this.start().then()
 	}
 
 	get state(): ScannerState {
@@ -141,6 +141,7 @@ class ScannerImpl implements Scanner {
 
 				const videoProps = await this.camera.start()
 				const dst = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC1)
+				const outmat = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC4)
 				if ('aspectRatio' in this.options.canvas.style) {
 					this.options.canvas.style.aspectRatio = videoProps.width! + ' / ' + videoProps.height!
 					this.options.canvas.width = videoProps.width!
@@ -182,65 +183,71 @@ class ScannerImpl implements Scanner {
 				}
 
 				const processVideo = () => {
-					if (this.camera.isStreaming) {
-						const begin = Date.now()
-						const src = this.camera.read()
+					const begin = Date.now()
+					try {
+						if (this.camera.isStreaming) {
+							const src = this.camera.read()
 
-						cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
+							cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY)
 
-						this.thresholder.threshold(dst, this.detected != null)
+							this.thresholder.threshold(dst, this.detected != null)
 
-						const contours = new cv.MatVector()
-						const hierarchy = new cv.Mat()
-						cv.findContours(dst, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+							const contours = new cv.MatVector()
+							const hierarchy = new cv.Mat()
+							cv.findContours(dst, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
-						if (this.options.debugView) {
-							cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGBA)
-						} else {
-							src.copyTo(dst)
-						}
-
-						const marker = this.detector.findMarker(hierarchy)
-						if (marker != null) {
-							if (!marker.equals(this.detected)) {
-								this.markerCount = 0
-								this.detected = marker
+							if (this.options.debugView) {
+								cv.cvtColor(dst, outmat, cv.COLOR_GRAY2RGBA)
+							} else {
+								src.copyTo(outmat)
 							}
-							this.markerCount = Math.min(actionDelay, this.markerCount + 2)
-							if (this.markerCount >= actionDelay) {
-								if (!this.currentMarker?.equals(marker)) {
-									console.log(marker.regions)
-									this.currentMarker = marker
-									this.options.markerChanged?.(marker)
+
+							const marker = this.detector.findMarker(hierarchy)
+							if (marker != null) {
+								if (!marker.equals(this.detected)) {
+									this.markerCount = 0
+									this.detected = marker
 								}
-								lastActionTime = Date.now() + actionTimeout
+								this.markerCount = Math.min(actionDelay, this.markerCount + 2)
+								if (this.markerCount >= actionDelay) {
+									if (!this.currentMarker?.equals(marker)) {
+										console.log(marker.regions)
+										this.currentMarker = marker
+										this.options.markerChanged?.(marker)
+									}
+									lastActionTime = Date.now() + actionTimeout
+								}
+								cv.drawContours(outmat, contours, marker.nodeIndex, colour, 2, cv.LINE_AA, hierarchy, 100)
+							} else {
+								this.detected = null
+								this.markerCount = Math.max(0, this.markerCount - 1)
+								if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
+									lastActionTime = 0
+									this.currentMarker = marker
+									this.options.markerChanged?.(null)
+								}
 							}
-							cv.drawContours(dst, contours, marker.nodeIndex, colour, 2, cv.LINE_AA, hierarchy, 100)
-						} else {
-							this.detected = null
-							this.markerCount = Math.max(0, this.markerCount - 1)
-							if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
-								lastActionTime = 0
-								this.currentMarker = marker
-								this.options.markerChanged?.(null)
-							}
-						}
 
-						if (videoProps.facingMode == 'user') {
-							cv.flip(dst, dst, 1)
+							if (videoProps.facingMode == 'user') {
+								cv.flip(outmat, outmat, 1)
+							}
+							cv.imshow(this.options.canvas, outmat)
+							const delay = 1000 / this.fps - (Date.now() - begin)
+							setTimeout(processVideo, delay)
+						} else {
+							dst.delete()
+							outmat.delete()
+							this.setState(ScannerState.idle)
 						}
-						cv.imshow(this.options.canvas, dst)
-						const delay = 1000 / this.fps - (Date.now() - begin)
-						setTimeout(processVideo, delay)
-					} else {
-						dst.delete()
-						this.setState(ScannerState.idle)
+					} catch (error) {
+						console.log(error)
+						this.stop()
 					}
 				}
 
 				processVideo()
 			} catch (error) {
-				console.trace(error)
+				console.log(error)
 				this.stop()
 			}
 		}

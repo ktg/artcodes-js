@@ -13,7 +13,6 @@ module.exports = {
 			// make sure to externalize deps that shouldn't be bundled
 			// into your library
 			//external: ['mirada'],
-			//external: ['mirada'],
 		}
 	},
 }
