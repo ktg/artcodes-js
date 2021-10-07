@@ -8977,7 +8977,7 @@ class ScannerImpl {
           deviceId: (_a2 = this.options.deviceSelect) == null ? void 0 : _a2.value
         }
       };
-      this.start();
+      this.start().then();
     };
     this.experience = experience;
     this.options = options;
@@ -9015,6 +9015,7 @@ class ScannerImpl {
         const colour = parseColourToScalar(this.options.outlineColor);
         const videoProps = await this.camera.start();
         const dst = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC1);
+        const outmat = new cv.Mat(videoProps.width, videoProps.height, cv.CV_8UC4);
         if ("aspectRatio" in this.options.canvas.style) {
           this.options.canvas.style.aspectRatio = videoProps.width + " / " + videoProps.height;
           this.options.canvas.width = videoProps.width;
@@ -9056,58 +9057,64 @@ class ScannerImpl {
         }
         const processVideo = () => {
           var _a2, _b2, _c2, _d2, _e2;
-          if (this.camera.isStreaming) {
-            const begin = Date.now();
-            const src = this.camera.read();
-            cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-            this.thresholder.threshold(dst, this.detected != null);
-            const contours = new cv.MatVector();
-            const hierarchy = new cv.Mat();
-            cv.findContours(dst, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
-            if (this.options.debugView) {
-              cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGBA);
-            } else {
-              src.copyTo(dst);
-            }
-            const marker = this.detector.findMarker(hierarchy);
-            if (marker != null) {
-              if (!marker.equals(this.detected)) {
-                this.markerCount = 0;
-                this.detected = marker;
+          const begin = Date.now();
+          try {
+            if (this.camera.isStreaming) {
+              const src = this.camera.read();
+              cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+              this.thresholder.threshold(dst, this.detected != null);
+              const contours = new cv.MatVector();
+              const hierarchy = new cv.Mat();
+              cv.findContours(dst, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+              if (this.options.debugView) {
+                cv.cvtColor(dst, outmat, cv.COLOR_GRAY2RGBA);
+              } else {
+                src.copyTo(outmat);
               }
-              this.markerCount = Math.min(actionDelay, this.markerCount + 2);
-              if (this.markerCount >= actionDelay) {
-                if (!((_a2 = this.currentMarker) == null ? void 0 : _a2.equals(marker))) {
-                  console.log(marker.regions);
-                  this.currentMarker = marker;
-                  (_c2 = (_b2 = this.options).markerChanged) == null ? void 0 : _c2.call(_b2, marker);
+              const marker = this.detector.findMarker(hierarchy);
+              if (marker != null) {
+                if (!marker.equals(this.detected)) {
+                  this.markerCount = 0;
+                  this.detected = marker;
                 }
-                lastActionTime = Date.now() + actionTimeout;
+                this.markerCount = Math.min(actionDelay, this.markerCount + 2);
+                if (this.markerCount >= actionDelay) {
+                  if (!((_a2 = this.currentMarker) == null ? void 0 : _a2.equals(marker))) {
+                    console.log(marker.regions);
+                    this.currentMarker = marker;
+                    (_c2 = (_b2 = this.options).markerChanged) == null ? void 0 : _c2.call(_b2, marker);
+                  }
+                  lastActionTime = Date.now() + actionTimeout;
+                }
+                cv.drawContours(outmat, contours, marker.nodeIndex, colour, 2, cv.LINE_AA, hierarchy, 100);
+              } else {
+                this.detected = null;
+                this.markerCount = Math.max(0, this.markerCount - 1);
+                if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
+                  lastActionTime = 0;
+                  this.currentMarker = marker;
+                  (_e2 = (_d2 = this.options).markerChanged) == null ? void 0 : _e2.call(_d2, null);
+                }
               }
-              cv.drawContours(dst, contours, marker.nodeIndex, colour, 2, cv.LINE_AA, hierarchy, 100);
+              if (videoProps.facingMode == "user") {
+                cv.flip(outmat, outmat, 1);
+              }
+              cv.imshow(this.options.canvas, outmat);
+              const delay = 1e3 / this.fps - (Date.now() - begin);
+              setTimeout(processVideo, delay);
             } else {
-              this.detected = null;
-              this.markerCount = Math.max(0, this.markerCount - 1);
-              if (this.currentMarker != null && lastActionTime != 0 && Date.now() > lastActionTime) {
-                lastActionTime = 0;
-                this.currentMarker = marker;
-                (_e2 = (_d2 = this.options).markerChanged) == null ? void 0 : _e2.call(_d2, null);
-              }
+              dst.delete();
+              outmat.delete();
+              this.setState(1);
             }
-            if (videoProps.facingMode == "user") {
-              cv.flip(dst, dst, 1);
-            }
-            cv.imshow(this.options.canvas, dst);
-            const delay = 1e3 / this.fps - (Date.now() - begin);
-            setTimeout(processVideo, delay);
-          } else {
-            dst.delete();
-            this.setState(1);
+          } catch (error) {
+            console.log(error);
+            this.stop();
           }
         };
         processVideo();
       } catch (error) {
-        console.trace(error);
+        console.log(error);
         this.stop();
       }
     }
