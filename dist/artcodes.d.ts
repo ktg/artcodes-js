@@ -32,6 +32,7 @@ declare enum ScannerState {
     scanning = 2
 }
 interface ScannerOptions {
+    readonly opencvPath?: string;
     readonly debugView?: Boolean;
     readonly useUrlHash?: Boolean;
     readonly canvas: HTMLCanvasElement;

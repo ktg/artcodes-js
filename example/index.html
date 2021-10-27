@@ -53,7 +53,7 @@
 							if (marker != null) {
 								buttonAction.style.display = 'block'
 								buttonAction.innerText = marker.action.name || ''
-								//buttonAction.classList.remove('mdc-fab--exited')
+								buttonAction.classList.remove('mdc-fab--exited')
 								buttonAction.addEventListener('click', () => {
 									let url = marker.action.url
 									if (url) {
@@ -61,7 +61,7 @@
 									}
 								})
 							} else {
-								//buttonAction.classList.add('mdc-fab--exited')
+								buttonAction.classList.add('mdc-fab--exited')
 							}
 						}
 					}

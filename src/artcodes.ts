@@ -17,6 +17,7 @@ export enum ScannerState {
 }
 
 export interface ScannerOptions {
+	readonly opencvPath?: string;
 	readonly debugView?: Boolean
 	readonly useUrlHash?: Boolean
 	readonly canvas: HTMLCanvasElement
@@ -60,6 +61,9 @@ export async function createScanner(experience: Experience, options: ScannerOpti
 		throw new Error("Artcodes requires https in order to access camera")
 	}
 	let opencvPath = 'opencv.js'
+	if(options.opencvPath) {
+		opencvPath = options.opencvPath
+	}
 	await loadOpencv({
 		opencvJsLocation: opencvPath
 	})

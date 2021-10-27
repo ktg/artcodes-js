@@ -7,7 +7,7 @@ import {Experience} from "./experience";
 export async function buildScan(root: HTMLElement, experience: Experience) {
 	const canvas = document.getElementById('artc_canvasOutput') as HTMLCanvasElement
 
-	const buttonAction = document.getElementById('artc_buttonAction') as HTMLButtonElement
+	const buttonAction = document.getElementById('artc_buttonAction') as HTMLAnchorElement
 	const buttonStart = document.getElementById('artc_buttonStart') as HTMLButtonElement
 	const buttonStop = document.getElementById('artc_buttonStop') as HTMLButtonElement
 
@@ -96,73 +96,73 @@ export async function buildScan(root: HTMLElement, experience: Experience) {
 
 
 window.addEventListener('load', () => {
-	const experience: Experience = {
-		name: "Wetlands Test",
-		image: "https://carolanguitar.files.wordpress.com/2014/10/bottom-to-top.jpg",
-		settings: {
-			threshSize: 801,
-			threshConst: 0,
-			actionDelay: 5,
-			embeddedChecksum: true,
-			tile: true
-		},
-		actions: [{
-			name: "1111",
-			url: "https://carolanguitar.com",
-			codes: ["1:1:1:1"]
-		}, {
-			name: "1122",
-			url: "https://carolanguitar.com/tech-spec/",
-			codes: ["1:1:2:2"]
-		}, {
-			name: "1223",
-			url: "https://carolanguitar.com/user-guide/",
-			codes: ["1:2:2:3"]
-		}, {
-			name: "2223",
-			url: "https://wp.me/P4QC5t-3T",
-			codes: ["2:2:2:3"]
-		}, {
-			name: "1114",
-			url: "https://www.artcodes.co.uk",
-			codes: ["1:1:1:4"]
-		}],
-	}
-
-
 	// const experience: Experience = {
-	// 	name: " Carolan Performance",
+	// 	name: "Wetlands Test",
 	// 	image: "https://carolanguitar.files.wordpress.com/2014/10/bottom-to-top.jpg",
+	// 	settings: {
+	// 		threshSize: 801,
+	// 		threshConst: 0,
+	// 		actionDelay: 5,
+	// 		embeddedChecksum: true,
+	// 		tile: true
+	// 	},
 	// 	actions: [{
-	// 		name: "Carolan Guitar",
+	// 		name: "1111",
 	// 		url: "https://carolanguitar.com",
-	// 		codes: ["1:1:1:1:2"]
+	// 		codes: ["1:1:1:1"]
 	// 	}, {
-	// 		name: "Tech Specs",
+	// 		name: "1122",
 	// 		url: "https://carolanguitar.com/tech-spec/",
-	// 		codes: ["1:1:2:2:3"]
+	// 		codes: ["1:1:2:2"]
 	// 	}, {
-	// 		name: "User Guide",
+	// 		name: "1223",
 	// 		url: "https://carolanguitar.com/user-guide/",
-	// 		codes: ["1:1:2:3:5"]
+	// 		codes: ["1:2:2:3"]
 	// 	}, {
-	// 		name: "Specifications",
-	// 		url: "http://wp.me/P4QC5t-3T",
-	// 		codes: ["1:1:2:4:4"]
+	// 		name: "2223",
+	// 		url: "https://wp.me/P4QC5t-3T",
+	// 		codes: ["2:2:2:3"]
 	// 	}, {
-	// 		name: "Learn about Artcodes",
-	// 		url: "http://www.artcodes.co.uk",
-	// 		codes: ["1:1:5:5:6"]
-	// 	}, {
-	// 		name: "Let's Play",
-	// 		url: "https://www.youtube.com/watch?v=lZaZwAXwox4",
-	// 		codes: ["1:1:1:4:5"]
-	// 	}, {
-	// 		name: "Playlist",
-	// 		url: "https://www.youtube.com/playlist?list=PLPvnQgbeSXV5tJzd4hZ9AFE0qF7oCuV2G",
-	// 		codes: ["1:1:3:3:4"]
+	// 		name: "1114",
+	// 		url: "https://www.artcodes.co.uk",
+	// 		codes: ["1:1:1:4"]
 	// 	}],
 	// }
+
+
+	const experience: Experience = {
+		name: " Carolan Performance",
+		image: "https://carolanguitar.files.wordpress.com/2014/10/bottom-to-top.jpg",
+		actions: [{
+			name: "Carolan Guitar",
+			url: "https://carolanguitar.com",
+			codes: ["1:1:1:1:2"]
+		}, {
+			name: "Tech Specs",
+			url: "https://carolanguitar.com/tech-spec/",
+			codes: ["1:1:2:2:3"]
+		}, {
+			name: "User Guide",
+			url: "https://carolanguitar.com/user-guide/",
+			codes: ["1:1:2:3:5"]
+		}, {
+			name: "Specifications",
+			url: "http://wp.me/P4QC5t-3T",
+			codes: ["1:1:2:4:4"]
+		}, {
+			name: "Learn about Artcodes",
+			url: "http://www.artcodes.co.uk",
+			codes: ["1:1:5:5:6"]
+		}, {
+			name: "Ceilidh",
+			url: "http://localhost/Dustysix.mp4",
+			codes: ["1:1:1:4:5"]
+		}, {
+			name: "Making",
+			url: "http://localhost/Making.mp4",
+			codes: ["1:1:3:3:4"]
+		}],
+	}
 
 	buildScan(document.getElementById('content')!!, experience)
 })

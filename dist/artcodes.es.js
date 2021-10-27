@@ -8948,6 +8948,9 @@ async function createScanner(experience, options) {
     throw new Error("Artcodes requires https in order to access camera");
   }
   let opencvPath = "opencv.js";
+  if (options.opencvPath) {
+    opencvPath = options.opencvPath;
+  }
   await mirada_min.exports.loadOpencv({
     opencvJsLocation: opencvPath
   });
